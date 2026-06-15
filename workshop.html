@@ -261,215 +261,74 @@ const embroidery = {
 const clothImage = new Image();
 clothImage.src = 'lotus-finish.jpg';
 
-// 图片加载完成后标记需要生成路径（由渲染循环在Canvas就绪后触发）
-let pathNeedsRegen = true;
-clothImage.onload = () => { pathNeedsRegen = true; };
-const origResize = resize;
-resize = function() {
-  origResize();
-  pathNeedsRegen = true;
+// 图片加载完成后生成刺绣引导路径
+clothImage.onload = () => {
+  generateGuidedPath();
 };
 
-// ============================================================
-// 从图片纹样轮廓提取边缘 → 沿轮廓生成连续刺绣引导路径
-// ============================================================
+// 从图片提取纹样轮廓 → 生成刺绣引导路径
 function generateGuidedPath() {
-  if (!clothImage.complete || clothImage.naturalWidth === 0) return;
-  pathNeedsRegen = false;
-
-  const imgW = clothImage.naturalWidth;
-  const imgH = clothImage.naturalHeight;
-
-  // --- 1. 将原图绘制到离屏 canvas ---
+  // 用离屏 canvas 采样图片
+  const sampleW = 180;
+  const sampleH = Math.round(sampleW * clothImage.naturalHeight / clothImage.naturalWidth);
   const offCanvas = document.createElement('canvas');
-  offCanvas.width = imgW;
-  offCanvas.height = imgH;
+  offCanvas.width = sampleW;
+  offCanvas.height = sampleH;
   const offCtx = offCanvas.getContext('2d');
-  offCtx.drawImage(clothImage, 0, 0, imgW, imgH);
+  offCtx.drawImage(clothImage, 0, 0, sampleW, sampleH);
 
-  const imgData = offCtx.getImageData(0, 0, imgW, imgH);
-  const px = imgData.data;
-  const W = imgW, H = imgH;
+  const imgData = offCtx.getImageData(0, 0, sampleW, sampleH);
+  const pixels = imgData.data;
 
-  // --- 2. 转为灰度图 ---
-  const gray = new Uint8Array(W * H);
-  for (let i = 0; i < W * H; i++) {
-    const idx = i * 4;
-    gray[i] = 0.299 * px[idx] + 0.587 * px[idx + 1] + 0.114 * px[idx + 2];
-  }
-
-  // --- 3. Sobel 边缘检测 ---
-  const edge = new Float32Array(W * H);
-  let maxEdge = 0;
-  for (let y = 1; y < H - 1; y++) {
-    for (let x = 1; x < W - 1; x++) {
-      const tl = gray[(y-1)*W + (x-1)], tc = gray[(y-1)*W + x], tr = gray[(y-1)*W + (x+1)];
-      const ml = gray[y*W + (x-1)],                         mr = gray[y*W + (x+1)];
-      const bl = gray[(y+1)*W + (x-1)], bc = gray[(y+1)*W + x], br = gray[(y+1)*W + (x+1)];
-      const gx = -tl + tr - 2*ml + 2*mr - bl + br;
-      const gy = -tl - 2*tc - tr + bl + 2*bc + br;
-      const mag = Math.sqrt(gx*gx + gy*gy);
-      edge[y*W + x] = mag;
-      if (mag > maxEdge) maxEdge = mag;
-    }
-  }
-
-  // --- 4. 自适应阈值提取边缘像素 ---
-  const threshold = maxEdge * 0.12; // 取最大梯度的12%为阈值
-  const edgePixels = [];
-  const step = 2; // 每隔2像素采样
-  for (let y = step; y < H - step; y += step) {
-    for (let x = step; x < W - step; x += step) {
-      if (edge[y*W + x] > threshold) {
-        edgePixels.push({ x, y });
+  const rawPoints = [];
+  // 采样每个像素，提取非白色区域（纹样轮廓）
+  const step = 3; // 每 3 像素采样一次
+  for (let y = 0; y < sampleH; y += step) {
+    for (let x = 0; x < sampleW; x += step) {
+      const idx = (y * sampleW + x) * 4;
+      const r = pixels[idx], g = pixels[idx + 1], b = pixels[idx + 2];
+      const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+      // 暗色/彩色 = 纹样区域（阈值 < 190 表示非白色背景）
+      if (gray < 190) {
+        rawPoints.push({ x, y });
       }
     }
   }
 
-  if (edgePixels.length < 5) {
-    // 回退：如果边缘太少，用暗色区域代替
-    const fallback = [];
-    for (let y = 0; y < H; y += 3) {
-      for (let x = 0; x < W; x += 3) {
-        if (gray[y*W + x] < 180) fallback.push({ x, y });
-      }
-    }
-    if (fallback.length < 10) return;
-    sortSnake(fallback, W);
-    const spacing = Math.max(1, Math.floor(fallback.length / 70));
-    const path = [];
-    for (let i = 0; i < fallback.length; i += spacing) {
-      path.push(pixelToCanvas(fallback[i].x, fallback[i].y));
-    }
-    embroidery.guidedPath = path;
-    embroidery.guidedIndex = 0;
-    console.log('🧵 引导路径（回退模式）：' + path.length + ' 点');
-    return;
-  }
+  if (rawPoints.length < 5) return; // 图片太亮，无有效纹样
 
-  // --- 5. 空间聚类 → 分组追踪连续轮廓线 ---
-  // 将边缘像素按空间邻近度分组成独立的轮廓片段
-  const visited = new Set();
-  const clusters = [];
-
-  for (const pt of edgePixels) {
-    const key = pt.y * W + pt.x;
-    if (visited.has(key)) continue;
-
-    // BFS 聚类
-    const cluster = [];
-    const queue = [pt];
-    visited.add(key);
-
-    while (queue.length > 0) {
-      const cur = queue.shift();
-      cluster.push(cur);
-      // 搜索 5px 范围内的邻居
-      const neighbors = edgePixels.filter(p => {
-        const nk = p.y * W + p.x;
-        if (visited.has(nk)) return false;
-        return Math.abs(p.x - cur.x) <= 5 && Math.abs(p.y - cur.y) <= 5;
-      });
-      for (const n of neighbors) {
-        visited.add(n.y * W + n.x);
-        queue.push(n);
-      }
-    }
-
-    if (cluster.length >= 6) clusters.push(cluster);
-  }
-
-  // --- 6. 每个簇内用最近邻追踪排序成连续路径 ---
-  const allPaths = [];
-  for (const cluster of clusters) {
-    if (cluster.length < 3) continue;
-    const ordered = traceNearestNeighbor(cluster);
-    allPaths.push(ordered);
-  }
-
-  // --- 7. 拼合所有轮廓片段 + 稀疏化 ---
-  const totalRaw = allPaths.reduce((sum, p) => sum + p.length, 0);
-  const targetCount = 70; // 目标总针数
-  const flatPath = [];
-  for (const seg of allPaths) {
-    const segPoints = Math.max(3, Math.round(seg.length * targetCount / totalRaw));
-    const segSpacing = Math.max(1, Math.floor(seg.length / segPoints));
-    for (let i = 0; i < seg.length; i += segSpacing) {
-      flatPath.push(pixelToCanvas(seg[i].x, seg[i].y));
-    }
-  }
-
-  embroidery.guidedPath = flatPath;
-  embroidery.guidedIndex = 0;
-  console.log('🧵 引导路径已生成：' + flatPath.length + ' 点，来自 ' + allPaths.length + ' 条轮廓线');
-}
-
-// 蛇形排序（回退用）
-function sortSnake(points, imgW) {
-  points.sort((a, b) => {
-    const rowA = Math.floor(a.y / 6);
-    const rowB = Math.floor(b.y / 6);
+  // 按从上到下、从左到右排序 → 形成连续的刺绣路径
+  rawPoints.sort((a, b) => {
+    const rowA = Math.floor(a.y / 8); // 按 8px 行分组
+    const rowB = Math.floor(b.y / 8);
     if (rowA !== rowB) return rowA - rowB;
+    // 偶数行从左到右，奇数行从右到左（蛇形走线，模拟手工刺绣）
     return (rowA % 2 === 0) ? a.x - b.x : b.x - a.x;
   });
-}
 
-// 最近邻追踪：从簇中构建连续路径
-function traceNearestNeighbor(points) {
-  if (points.length <= 1) return [...points];
-  const remaining = [...points];
-  const result = [remaining.shift()];
-
-  while (remaining.length > 0) {
-    const last = result[result.length - 1];
-    let bestIdx = 0;
-    let bestDist = Infinity;
-    for (let i = 0; i < remaining.length; i++) {
-      const dx = remaining[i].x - last.x;
-      const dy = remaining[i].y - last.y;
-      const dist = dx*dx + dy*dy;
-      if (dist < bestDist) { bestDist = dist; bestIdx = i; }
-    }
-    result.push(remaining[bestIdx]);
-    remaining.splice(bestIdx, 1);
-  }
-  return result;
-}
-
-// 像素坐标 → Canvas画布坐标（精确匹配 draw() 中图片的渲染位置）
-function pixelToCanvas(px, py) {
-  const w = canvas.width, h = canvas.height;
-  const cx = w/2, cy = h/2;
-  const r = Math.min(cx, cy) * 0.78;
-  const clothW = r * 2;
-  const clothH = r * 1.6;
-
-  // 与 draw() 完全一致的图片缩放逻辑
-  const imgW = clothImage.naturalWidth;
-  const imgH = clothImage.naturalHeight;
-  const imgAspect = imgW / imgH;
-  const clothAspect = clothW / clothH;
-  let iw, ih;
-  if (imgAspect > clothAspect) {
-    iw = clothW; ih = clothW / imgAspect;
-  } else {
-    ih = clothH; iw = clothH * imgAspect;
+  // 稀疏化：每 N 个点取一个，控制总针数
+  const spacing = Math.max(1, Math.floor(rawPoints.length / 60));
+  const path = [];
+  for (let i = 0; i < rawPoints.length; i += spacing) {
+    // 将采样坐标映射到绣布区域
+    const clothX = cx_for_path(sampleW, rawPoints[i].x);
+    const clothY = cy_for_path(sampleH, rawPoints[i].y);
+    path.push({ x: clothX, y: clothY });
   }
 
-  // 图片绘制区域：左 = cx - iw/2, 上 = cy - ih/2
-  const imgLeft = cx - iw / 2;
-  const imgTop = cy - ih / 2;
+  embroidery.guidedPath = path;
+  embroidery.guidedIndex = 0;
+  console.log('🧵 引导路径已生成：' + path.length + ' 个刺绣点');
+}
 
-  const canvasX = imgLeft + (px / imgW) * iw;
-  const canvasY = imgTop + (py / imgH) * ih;
-
-  // 钳制在绣布边框内（留 10px 内边距）
-  const clothL = cx - r + 10, clothR = cx + r - 10;
-  const clothT = cy - r*0.8 + 10, clothB = cy + r*0.8 - 10;
-  return {
-    x: Math.max(clothL, Math.min(clothR, canvasX)),
-    y: Math.max(clothT, Math.min(clothB, canvasY))
-  };
+// 路径坐标映射（需在 draw 的 cloth 坐标系中使用）
+function cx_for_path(sw, sx) {
+  const w = canvas.width, cx = w/2, r = Math.min(cx, canvas.height/2) * 0.78;
+  return cx - r + (sx / sw) * r * 2;
+}
+function cy_for_path(sh, sy) {
+  const w = canvas.width, h = canvas.height, cx = w/2, cy = h/2, r = Math.min(cx, cy) * 0.78;
+  return cy - r * 0.8 + (sy / sh) * r * 1.6;
 }
 
 const stitchNames = { running:'平针绣', back:'回针绣', chain:'锁链针', cross:'十字针' };
@@ -902,8 +761,6 @@ function flashCard(id) {
 
 // --- 渲染 ---
 function draw() {
-  // Canvas尺寸变化后重新生成路径
-  if (pathNeedsRegen && clothImage.complete) generateGuidedPath();
   try {
     animTime += 0.016;
     frameCount++;

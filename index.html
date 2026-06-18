@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>刺绣工艺 · 手势交互工坊</title>
+<title>刺绣工艺 · 指尖上的东方美学</title>
 <style>
 :root {
   --bg: #1a1410;
@@ -20,891 +20,457 @@
   --font-ui: 'PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif;
 }
 *{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
 body{
   background:var(--bg);color:var(--ink);font-family:var(--font-ui);
-  overflow:hidden;height:100vh;user-select:none;-webkit-user-select:none;
+  line-height:1.7;overflow-x:hidden;
 }
-.workshop{
-  display:grid;
-  grid-template-columns:260px 1fr 340px;
-  grid-template-rows:56px 1fr 48px;
-  grid-template-areas:"header header header" "sidebar main knowledge" "status status status";
-  height:100vh;gap:2px;background:var(--border);
-}
-.header{
-  grid-area:header;background:var(--panel);display:flex;align-items:center;
-  padding:0 24px;gap:16px;border-bottom:1px solid var(--border);
-}
-.header .logo{font-family:var(--font-cn);font-size:20px;color:var(--gold);letter-spacing:3px;}
-.header .logo span{color:var(--red-light);}
-.header .stitch-indicator{
-  margin-left:auto;display:flex;gap:6px;align-items:center;
-}
-.stitch-dot{width:10px;height:10px;border-radius:50%;background:var(--ink-dim);transition:all 0.3s;}
-.stitch-dot.current{background:var(--red-light);box-shadow:0 0 10px var(--red-light);transform:scale(1.3);}
 
-.sidebar{
-  grid-area:sidebar;background:var(--panel);overflow-y:auto;padding:14px;
-  display:flex;flex-direction:column;gap:10px;
+/* ── 导航 ── */
+.nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  background:rgba(26,20,16,0.92);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  padding:0 24px;height:56px;gap:32px;
 }
-.sidebar h3{font-family:var(--font-cn);color:var(--gold);font-size:15px;text-align:center;padding-bottom:8px;border-bottom:1px solid var(--border);}
-.gesture-card{
-  background:rgba(0,0,0,0.25);border:1px solid var(--border);border-radius:var(--radius);
-  padding:12px;transition:all 0.3s;
+.nav a{
+  color:var(--ink-dim);text-decoration:none;font-size:13px;
+  font-family:var(--font-cn);transition:color 0.3s;letter-spacing:1px;
 }
-.gesture-card.triggered{border-color:var(--gold);box-shadow:0 0 18px rgba(201,169,110,0.25);background:rgba(201,169,110,0.08);}
-.gesture-card .icon{font-size:32px;text-align:center;margin-bottom:4px;}
-.gesture-card .name{font-family:var(--font-cn);font-size:13px;color:var(--gold-light);text-align:center;margin-bottom:3px;}
-.gesture-card .desc{font-size:11px;color:var(--ink-dim);text-align:center;line-height:1.5;}
-.gesture-card .status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ink-dim);margin-right:4px;}
-.gesture-card .status-dot.live{background:var(--red-light);box-shadow:0 0 8px var(--red-light);animation:pulse 0.5s infinite alternate;}
-@keyframes pulse{to{transform:scale(1.6);opacity:0.5}}
-.camera-toggle{
-  margin-top:auto;padding:12px;background:var(--red);color:#fff;border:none;
-  border-radius:var(--radius);cursor:pointer;font-family:var(--font-cn);font-size:13px;transition:all 0.3s;
+.nav a:hover{color:var(--gold)}
+.nav .brand{
+  color:var(--gold);font-family:var(--font-cn);font-size:16px;
+  letter-spacing:3px;text-decoration:none;
+}
+
+/* ── 英雄区 ── */
+.hero{
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;
+  padding:100px 24px 80px;
+  position:relative;overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;top:50%;left:50%;
+  width:600px;height:600px;transform:translate(-50%,-50%);
+  background:radial-gradient(circle,rgba(201,169,110,0.07) 0%,transparent 70%);
+  pointer-events:none;
+}
+/* 装饰绣线 */
+.hero-thread{
+  position:absolute;pointer-events:none;opacity:0.15;
+  stroke:var(--gold);fill:none;stroke-width:1.2;
+}
+.hero .subtitle{
+  font-family:var(--font-cn);font-size:14px;color:var(--ink-dim);
+  letter-spacing:8px;margin-bottom:20px;
+}
+.hero .title{
+  font-family:var(--font-cn);font-size:clamp(42px,8vw,72px);
+  color:var(--gold);letter-spacing:12px;margin-bottom:16px;
   position:relative;
 }
-.camera-toggle:hover{background:var(--red-light);}
-.camera-toggle.off{background:#555;}
-.camera-toggle.live{
-  background:#2ecc71;animation:cameraPulse 1.2s infinite;
+.hero .title .accent{color:var(--red-light);}
+.hero .poem{
+  font-family:var(--font-cn);font-size:15px;color:var(--ink-dim);
+  max-width:480px;line-height:2;margin-bottom:40px;
 }
-@keyframes cameraPulse{
-  0%,100%{box-shadow:0 0 8px #2ecc71;}
-  50%{box-shadow:0 0 24px #2ecc71,0 0 40px rgba(46,204,113,0.4);}
+.hero .cta{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:14px 36px;background:var(--red);color:#fff;
+  font-family:var(--font-cn);font-size:15px;letter-spacing:3px;
+  text-decoration:none;border-radius:30px;transition:all 0.35s;
+  border:1px solid transparent;
 }
-.camera-badge{
-  display:inline-block;padding:4px 12px;border-radius:14px;font-size:12px;
-  font-family:var(--font-cn);margin-left:12px;
-}
-.camera-badge.off{background:#555;color:#999;}
-.camera-badge.loading{background:#f39c12;color:#fff;animation:pulse 0.6s infinite alternate;}
-.camera-badge.on{background:#2ecc71;color:#fff;}
-.camera-badge.error{background:#e74c3c;color:#fff;}
+.hero .cta:hover{background:var(--red-light);box-shadow:0 0 32px rgba(231,76,60,0.4);transform:translateY(-2px)}
+.hero .cta .arrow{display:inline-block;transition:transform 0.35s}
+.hero .cta:hover .arrow{transform:translateX(3px)}
 
-.main-stage{
-  grid-area:main;position:relative;
-  background:radial-gradient(ellipse at center,#2a2318 0%,#1a1410 70%);
-  overflow:hidden;
+.scroll-hint{
+  position:absolute;bottom:32px;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  animation:bob 2s ease-in-out infinite;
 }
-.main-stage canvas{width:100%;height:100%;display:block;}
-.stage-label{
-  position:absolute;top:14px;left:50%;transform:translateX(-50%);
-  font-family:var(--font-cn);font-size:18px;color:var(--gold);
-  letter-spacing:6px;text-shadow:0 2px 8px rgba(0,0,0,0.6);pointer-events:none;z-index:10;
+.scroll-hint span{font-size:11px;color:var(--ink-dim);letter-spacing:2px}
+.scroll-hint .line{width:1px;height:28px;background:linear-gradient(180deg,var(--gold),transparent)}
+@keyframes bob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-8px)}}
+
+/* ── 通用区块 ── */
+.section{padding:60px 24px;max-width:1000px;margin:0 auto}
+.section-label{
+  font-family:var(--font-cn);font-size:12px;color:var(--red-light);
+  letter-spacing:6px;text-align:center;margin-bottom:8px;
 }
-.gesture-toast{
-  position:absolute;bottom:60px;left:50%;transform:translateX(-50%);
-  padding:10px 24px;background:rgba(0,0,0,0.8);border:1px solid var(--gold);
-  border-radius:24px;font-family:var(--font-cn);font-size:14px;
-  color:var(--gold-light);pointer-events:none;transition:all 0.3s;
-  opacity:0;transform:translateX(-50%) translateY(10px);
+.section-title{
+  font-family:var(--font-cn);font-size:clamp(24px,4vw,32px);
+  color:var(--gold);text-align:center;letter-spacing:4px;margin-bottom:12px;
 }
-.gesture-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-.camera-preview{
-  position:absolute;bottom:14px;right:14px;width:280px;height:210px;
-  border:2px solid var(--gold);border-radius:10px;overflow:hidden;
-  display:none;background:#000;z-index:20;
-}
-.camera-preview.on{display:block;}
-.camera-preview video{
-  width:100%;height:100%;object-fit:cover;
-  transform:scaleX(-1);
-}
-.camera-preview .overlay{
-  position:absolute;top:0;left:0;width:100%;height:100%;
-  pointer-events:none;z-index:21;
+.section-desc{
+  text-align:center;color:var(--ink-dim);font-size:13px;max-width:560px;
+  margin:0 auto 40px;line-height:1.8;
 }
 
-.knowledge{
-  grid-area:knowledge;background:var(--panel);overflow-y:auto;padding:14px;
-  display:flex;flex-direction:column;gap:10px;
+/* ── 刺绣简介 ── */
+.intro-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:16px;
 }
-.knowledge h3{font-family:var(--font-cn);color:var(--gold);font-size:15px;padding-bottom:8px;border-bottom:1px solid var(--border);}
-.craft-intro{
-  font-family:var(--font-cn);font-size:12px;line-height:1.7;color:var(--ink-dim);
-  background:rgba(0,0,0,0.15);border-radius:var(--radius);padding:12px;border-left:3px solid var(--gold);
+.intro-card{
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:var(--radius);padding:24px 18px;text-align:center;
+  transition:all 0.35s;position:relative;overflow:hidden;
 }
-.tech-card{background:rgba(0,0,0,0.15);border-radius:var(--radius);padding:10px;border:1px solid var(--border);}
-.tech-card h4{font-family:var(--font-cn);font-size:13px;color:var(--gold-light);margin-bottom:5px;}
-.tech-card p{font-size:11px;color:var(--ink-dim);line-height:1.6;}
+.intro-card::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  opacity:0;transition:opacity 0.35s;
+}
+.intro-card:hover::after{opacity:1}
+.intro-card:hover{border-color:var(--gold);transform:translateY(-4px);box-shadow:0 8px 24px rgba(201,169,110,0.1)}
+.intro-card .icon{font-size:40px;margin-bottom:10px}
+.intro-card h4{font-family:var(--font-cn);font-size:16px;color:var(--gold-light);margin-bottom:6px}
+.intro-card p{font-size:12px;color:var(--ink-dim);line-height:1.6}
 
-.status-bar{
-  grid-area:status;background:var(--panel);display:flex;align-items:center;
-  padding:0 20px;gap:16px;border-top:1px solid var(--border);font-size:11px;color:var(--ink-dim);
+/* ── 针法卡片 ── */
+.stitch-cards{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:18px;margin-top:16px;
 }
-.status-bar .dot{width:7px;height:7px;border-radius:50%;background:#555;}
-.status-bar .dot.live{background:#2ecc71;}
-.key-hint{margin-left:auto;font-size:10px;background:rgba(255,255,255,0.04);padding:3px 10px;border-radius:6px;}
+.stitch-card{
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:var(--radius);padding:0;overflow:hidden;
+  transition:all 0.35s;cursor:default;
+}
+.stitch-card:hover{transform:translateY(-6px);box-shadow:0 12px 32px rgba(0,0,0,0.4);border-color:var(--gold)}
+.stitch-card .visual{
+  height:160px;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,rgba(201,169,110,0.06) 0%,rgba(192,57,43,0.04) 100%);
+  position:relative;overflow:hidden;
+}
+.stitch-card .visual svg{width:100%;height:100%}
+.stitch-card .info{padding:18px}
+.stitch-card .info .num{
+  font-family:var(--font-cn);font-size:36px;color:var(--gold);opacity:0.3;
+  line-height:1;margin-bottom:-8px;
+}
+.stitch-card h4{font-family:var(--font-cn);font-size:16px;color:var(--gold-light);margin-bottom:6px}
+.stitch-card p{font-size:12px;color:var(--ink-dim);line-height:1.7}
 
-@media(max-width:900px){
-  .workshop{grid-template-columns:1fr;grid-template-rows:48px 1fr 44px;grid-template-areas:"header" "main" "status";}
-  .sidebar,.knowledge{display:none;}
+/* ── 底栏 CTA ── */
+.footer-cta{
+  text-align:center;padding:60px 24px 80px;
+  background:linear-gradient(180deg,transparent,rgba(201,169,110,0.04));
+  border-top:1px solid var(--border);
+}
+.footer-cta h3{font-family:var(--font-cn);font-size:22px;color:var(--gold-light);margin-bottom:8px}
+.footer-cta p{color:var(--ink-dim);font-size:13px;margin-bottom:24px}
+.footer-cta .cta{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:14px 36px;background:var(--red);color:#fff;
+  font-family:var(--font-cn);font-size:15px;letter-spacing:3px;
+  text-decoration:none;border-radius:30px;transition:all 0.35s;
+}
+.footer-cta .cta:hover{background:var(--red-light);box-shadow:0 0 32px rgba(231,76,60,0.4);transform:translateY(-2px)}
+
+.footer-note{
+  text-align:center;padding:20px;color:var(--ink-dim);font-size:11px;
+  border-top:1px solid var(--border);
+}
+
+/* ── 入场动画 ── */
+.fade-up{
+  opacity:0;transform:translateY(30px);transition:all 0.6s cubic-bezier(0.22,1,0.36,1);
+}
+.fade-up.visible{opacity:1;transform:translateY(0)}
+
+@media(max-width:640px){
+  .nav{gap:16px;padding:0 12px}
+  .nav a{font-size:11px}
+  .stitch-cards{grid-template-columns:1fr}
 }
 </style>
 </head>
 <body>
 
-<div class="workshop">
-  <header class="header">
-    <div class="logo">民间<span>工艺</span> · 刺绣手势工坊</div>
-    <span class="camera-badge off" id="camBadge">📷 摄像头关闭</span>
-    <div class="stitch-indicator">
-      <span style="font-size:12px;color:var(--ink-dim)">针法:</span>
-      <span class="stitch-dot current" id="sd-running" title="平针"></span>
-      <span class="stitch-dot" id="sd-back" title="回针"></span>
-      <span class="stitch-dot" id="sd-chain" title="锁链针"></span>
-      <span class="stitch-dot" id="sd-cross" title="十字针"></span>
-    </div>
-  </header>
+<!-- 导航 -->
+<nav class="nav">
+  <a href="#intro">刺绣简介</a>
+  <a href="#stitches">四大针法</a>
+  <a href="workshop.html" class="brand">民间<span style="color:var(--red-light)">工艺</span></a>
+  <a href="#workshop">刺绣工坊</a>
+  <a href="workshop.html">开始体验</a>
+</nav>
 
-  <aside class="sidebar">
-    <h3>🤌 刺绣手势指南</h3>
-    <div class="gesture-card" id="gc-thread">
-      <div class="icon">🤏</div>
-      <div class="name"><span class="status-dot" id="dot-thread"></span>手指捏合</div>
-      <div class="desc">拇指与食指捏合<br>→ 沿莲花纹样绣一针<br>金色光点 = 下一针位置</div>
-    </div>
-    <div class="gesture-card" id="gc-pinchmove">
-      <div class="icon">🪡</div>
-      <div class="name"><span class="status-dot" id="dot-pinchmove"></span>手指移动</div>
-      <div class="desc">移动手指<br>→ 绣针实时跟随<br>绣布区域内自由移动</div>
-    </div>
-    <div class="gesture-card" id="gc-open">
-      <div class="icon">🖐️</div>
-      <div class="name"><span class="status-dot" id="dot-open"></span>张开手掌</div>
-      <div class="desc">五指完全张开<br>持续1秒<br>→ 清空绣布重新开始</div>
-    </div>
-    <button class="camera-toggle" id="cameraBtn">📷 开启摄像头手势识别</button>
-  </aside>
+<!-- 英雄区 -->
+<section class="hero">
+  <svg class="hero-thread" viewBox="0 0 800 600" preserveAspectRatio="none" style="width:100%;height:100%;position:absolute;top:0;left:0">
+    <path d="M-20,120 Q200,80 400,140 Q600,200 820,100" />
+    <path d="M-20,480 Q200,520 400,460 Q600,400 820,500" />
+    <circle cx="100" cy="200" r="2" fill="var(--gold)" opacity="0.3"/>
+    <circle cx="300" cy="350" r="1.5" fill="var(--gold)" opacity="0.2"/>
+    <circle cx="500" cy="180" r="2" fill="var(--gold)" opacity="0.3"/>
+    <circle cx="680" cy="400" r="1.5" fill="var(--gold)" opacity="0.2"/>
+  </svg>
 
-  <main class="main-stage" id="mainStage">
-    <canvas id="mainCanvas"></canvas>
-    <div class="stage-label">刺 绣 工 艺</div>
-    <div class="gesture-toast" id="gestureToast"></div>
-    <div class="camera-preview" id="cameraPreview">
-      <video id="camVideo" playsinline autoplay></video>
-      <canvas class="overlay" id="camOverlay" width="280" height="210"></canvas>
-    </div>
-  </main>
+  <div class="subtitle">中 国 传 统 手 工 艺</div>
+  <h1 class="title">刺<span class="accent">绣</span>工艺</h1>
+  <p class="poem">
+    以针为笔，以线为墨<br>
+    一针一线间，绣出千年东方雅韵<br>
+    指尖流转处，尽显匠心之美
+  </p>
+  <a href="workshop.html" class="cta">
+    进入刺绣工坊 <span class="arrow">→</span>
+  </a>
+  <div class="scroll-hint">
+    <span>向下探索</span>
+    <div class="line"></div>
+  </div>
+</section>
 
-  <aside class="knowledge">
-    <h3>📖 刺绣工艺知识</h3>
-    <div class="craft-intro">
-      刺绣是用针将丝线在织物上绣制出各种装饰图案的工艺。中国四大名绣：<b>苏绣</b>（精细雅洁）、<b>湘绣</b>（豪放鲜活）、<b>蜀绣</b>（严谨细腻）、<b>粤绣</b>（富丽堂皇）。各具鲜明地域特色与技法体系。
+<!-- 刺绣简介 -->
+<section class="section" id="intro">
+  <div class="section-label fade-up">传 承 千 年</div>
+  <h2 class="section-title fade-up">何为刺绣</h2>
+  <p class="section-desc fade-up">
+    刺绣，古称"针黹"，是用针将丝线或其他纤维在织物上绣制出各种装饰图案的工艺。
+    作为中国最古老的手工艺之一，它已有两千余年历史，是东方美学的重要载体。
+  </p>
+  <div class="intro-grid">
+    <div class="intro-card fade-up">
+      <div class="icon">🧵</div>
+      <h4>以针作画</h4>
+      <p>绣针穿梭于丝帛之间，如画笔游走于宣纸之上，每一针都是创作者心血的凝结。</p>
     </div>
-    <div class="tech-card" id="currentStitchInfo">
-      <h4>🪡 当前针法：平针绣</h4>
-      <p>平针绣（齐针）是刺绣最基础的针法。线条排列整齐均匀，针脚长短一致，不重叠、不露底。从纹样的一端到另一端用直线条绣成，边缘整齐光滑。适用于绣制花卉、叶片等大面积填色。</p>
+    <div class="intro-card fade-up">
+      <div class="icon">🎨</div>
+      <h4>丝线为色</h4>
+      <p>一根丝线可劈为数十缕，色彩变化无穷。绣娘以线代色，层层晕染出立体生动的画面。</p>
     </div>
-    <div class="tech-card">
-      <h4>🎨 四大针法一览</h4>
-      <p style="font-size:10px;line-height:1.8;">
-        <b>平针：</b>直线排列整齐均匀，最基础。<br>
-        <b>回针：</b>每针后退半步，线迹紧密连续。<br>
-        <b>锁链针：</b>环环相扣如锁链，装饰性强。<br>
-        <b>十字针：</b>交叉成"十"字，常用于几何纹样。
-      </p>
+    <div class="intro-card fade-up">
+      <div class="icon">📜</div>
+      <h4>千年传承</h4>
+      <p>从战国楚墓的锁绣残片，到唐宋的佛像绣品，再到明清的四大名绣，技艺代代相传。</p>
     </div>
-  </aside>
+    <div class="intro-card fade-up">
+      <div class="icon">🏛️</div>
+      <h4>四大名绣</h4>
+      <p>苏绣精细雅洁、湘绣豪放鲜活、蜀绣严谨细腻、粤绣富丽堂皇，四大地域名绣各具风韵。</p>
+    </div>
+  </div>
+</section>
 
-  <footer class="status-bar">
-    <span><span class="dot" id="camDot"></span> <span id="camStatus">摄像头：未启动</span></span>
-    <span id="gestureStatus">手势：等待中…</span>
-    <span id="stitchCount">已绣：0 针</span>
-    <span id="fpsDisplay">FPS: —</span>
-    <span class="key-hint">⌨ 键盘：E键绣一针 | 1-4切换针法 | R清空 | 空格开关摄像头</span>
-  </footer>
-</div>
+<!-- 四大针法 -->
+<section class="section" id="stitches">
+  <div class="section-label fade-up">技 法 之 美</div>
+  <h2 class="section-title fade-up">四大基础针法</h2>
+  <p class="section-desc fade-up">
+    针法是刺绣的灵魂。不同的走针方式造就截然不同的纹理效果。
+    以下四种基础针法，是每一位刺绣者的必修功课。
+  </p>
+
+  <div class="stitch-cards">
+    <!-- 平针绣 -->
+    <div class="stitch-card fade-up">
+      <div class="visual">
+        <svg viewBox="0 0 240 160">
+          <rect width="240" height="160" fill="none"/>
+          <!-- 绣布纹理 -->
+          <g opacity="0.06">
+            <line x1="0" y1="20" x2="240" y2="20" stroke="#f0e6d3" stroke-width="0.5"/>
+            <line x1="0" y1="40" x2="240" y2="40" stroke="#f0e6d3" stroke-width="0.5"/>
+            <line x1="0" y1="60" x2="240" y2="60" stroke="#f0e6d3" stroke-width="0.5"/>
+            <line x1="0" y1="80" x2="240" y2="80" stroke="#f0e6d3" stroke-width="0.5"/>
+            <line x1="0" y1="100" x2="240" y2="100" stroke="#f0e6d3" stroke-width="0.5"/>
+            <line x1="0" y1="120" x2="240" y2="120" stroke="#f0e6d3" stroke-width="0.5"/>
+            <line x1="0" y1="140" x2="240" y2="140" stroke="#f0e6d3" stroke-width="0.5"/>
+          </g>
+          <!-- 平针：水平平行的线条 -->
+          <g opacity="0.9">
+            <rect x="28" y="35" width="180" height="13" rx="2" fill="#c0392b"/>
+            <rect x="28" y="55" width="176" height="13" rx="2" fill="#e74c3c"/>
+            <rect x="28" y="75" width="184" height="13" rx="2" fill="#d35400"/>
+            <rect x="28" y="95" width="178" height="13" rx="2" fill="#c0392b"/>
+            <rect x="28" y="115" width="182" height="13" rx="2" fill="#e74c3c"/>
+          </g>
+          <!-- 绣针 -->
+          <line x1="120" y1="8" x2="120" y2="150" stroke="#aaa" stroke-width="1.5" stroke-dasharray="4 4" opacity="0.15"/>
+          <!-- 针法名标注 -->
+          <text x="120" y="152" text-anchor="middle" fill="#c9a96e" font-size="11" font-family="serif" opacity="0.7">平针绣 — 齐整排列</text>
+        </svg>
+      </div>
+      <div class="info">
+        <div class="num">壹</div>
+        <h4>平针绣 · 齐针</h4>
+        <p>最基础的刺绣针法。线条排列整齐均匀，针脚长短一致，不重叠、不露底。从纹样一端到另一端用直线条绣成，边缘整齐光滑，适合大面积填色。</p>
+      </div>
+    </div>
+
+    <!-- 回针绣 -->
+    <div class="stitch-card fade-up">
+      <div class="visual">
+        <svg viewBox="0 0 240 160">
+          <!-- 绣布纹理 -->
+          <g opacity="0.06">
+            <line x1="0" y1="20" x2="240" y2="20" stroke="#f0e6d3" stroke-width="0.5"/>
+            <line x1="0" y1="40" x2="240" y2="40" stroke="#f0e6d3" stroke-width="0.5"/>
+            <line x1="0" y1="60" x2="240" y2="60" stroke="#f0e6d3" stroke-width="0.5"/>
+            <line x1="0" y1="80" x2="240" y2="80" stroke="#f0e6d3" stroke-width="0.5"/>
+            <line x1="0" y1="100" x2="240" y2="100" stroke="#f0e6d3" stroke-width="0.5"/>
+            <line x1="0" y1="120" x2="240" y2="120" stroke="#f0e6d3" stroke-width="0.5"/>
+            <line x1="0" y1="140" x2="240" y2="140" stroke="#f0e6d3" stroke-width="0.5"/>
+          </g>
+          <!-- 回针：段段后退重叠 -->
+          <g opacity="0.9">
+            <rect x="28" y="55" width="44" height="6" rx="1.5" fill="#2980b9"/>
+            <rect x="56" y="55" width="44" height="6" rx="1.5" fill="#3498db"/>
+            <rect x="84" y="55" width="44" height="6" rx="1.5" fill="#2980b9"/>
+            <rect x="112" y="55" width="44" height="6" rx="1.5" fill="#3498db"/>
+            <rect x="140" y="55" width="44" height="6" rx="1.5" fill="#2980b9"/>
+          </g>
+          <!-- 后退箭头标注 -->
+          <g opacity="0.4">
+            <line x1="72" y1="80" x2="56" y2="80" stroke="#3498db" stroke-width="1"/>
+            <polygon points="56,76 50,80 56,84" fill="#3498db"/>
+            <text x="64" y="94" text-anchor="middle" fill="#3498db" font-size="8" font-family="sans-serif">后退半步</text>
+          </g>
+          <text x="120" y="152" text-anchor="middle" fill="#c9a96e" font-size="11" font-family="serif" opacity="0.7">回针绣 — 紧密连续</text>
+        </svg>
+      </div>
+      <div class="info">
+        <div class="num">贰</div>
+        <h4>回针绣 · 倒针</h4>
+        <p>每针刺绣完成后向后倒退半步距离，下一针从上一针尾部起针。线迹紧密连续，如同缝纫机走线般结实牢固，常用于勾勒轮廓线条。</p>
+      </div>
+    </div>
+
+    <!-- 锁链针 -->
+    <div class="stitch-card fade-up">
+      <div class="visual">
+        <svg viewBox="0 0 240 160">
+          <!-- 绣布纹理 -->
+          <g opacity="0.06">
+            <line x1="0" y1="20" x2="240" y2="20" stroke="#f0e6d3" stroke-width="0.5"/>
+            <line x1="0" y1="40" x2="240" y2="40" stroke="#f0e6d3" stroke-width="0.5"/>
+            <line x1="0" y1="60" x2="240" y2="60" stroke="#f0e6d3" stroke-width="0.5"/>
+            <line x1="0" y1="80" x2="240" y2="80" stroke="#f0e6d3" stroke-width="0.5"/>
+            <line x1="0" y1="100" x2="240" y2="100" stroke="#f0e6d3" stroke-width="0.5"/>
+            <line x1="0" y1="120" x2="240" y2="120" stroke="#f0e6d3" stroke-width="0.5"/>
+            <line x1="0" y1="140" x2="240" y2="140" stroke="#f0e6d3" stroke-width="0.5"/>
+          </g>
+          <!-- 锁链针：环环相扣的椭圆 -->
+          <g>
+            <ellipse cx="52" cy="75" rx="20" ry="10" fill="none" stroke="#8e44ad" stroke-width="3.5" opacity="0.9"/>
+            <ellipse cx="80" cy="75" rx="20" ry="10" fill="none" stroke="#9b59b6" stroke-width="3.5" opacity="0.85"/>
+            <ellipse cx="108" cy="75" rx="20" ry="10" fill="none" stroke="#8e44ad" stroke-width="3.5" opacity="0.9"/>
+            <ellipse cx="136" cy="75" rx="20" ry="10" fill="none" stroke="#9b59b6" stroke-width="3.5" opacity="0.85"/>
+            <ellipse cx="164" cy="75" rx="20" ry="10" fill="none" stroke="#8e44ad" stroke-width="3.5" opacity="0.9"/>
+          </g>
+          <!-- 连接标注 -->
+          <g opacity="0.4">
+            <circle cx="66" cy="72" r="2" fill="#9b59b6"/>
+            <line x1="66" y1="74" x2="66" y2="88" stroke="#9b59b6" stroke-width="0.8" stroke-dasharray="2 2"/>
+          </g>
+          <text x="120" y="152" text-anchor="middle" fill="#c9a96e" font-size="11" font-family="serif" opacity="0.7">锁链针 — 环环相扣</text>
+        </svg>
+      </div>
+      <div class="info">
+        <div class="num">叁</div>
+        <h4>锁链针 · 链绣</h4>
+        <p>绣线在针下绕圈后抽出，形成环环相扣的锁链效果。线条圆润饱满，富有立体感与装饰性，常用于花茎、藤蔓等曲线纹样的表达。</p>
+      </div>
+    </div>
+
+    <!-- 十字针 -->
+    <div class="stitch-card fade-up">
+      <div class="visual">
+        <svg viewBox="0 0 240 160">
+          <!-- 绣布纹理（方格） -->
+          <g opacity="0.04">
+            <line x1="0" y1="20" x2="240" y2="20" stroke="#f0e6d3" stroke-width="0.5"/>
+            <line x1="0" y1="40" x2="240" y2="40" stroke="#f0e6d3" stroke-width="0.5"/>
+            <line x1="0" y1="60" x2="240" y2="60" stroke="#f0e6d3" stroke-width="0.5"/>
+            <line x1="0" y1="80" x2="240" y2="80" stroke="#f0e6d3" stroke-width="0.5"/>
+            <line x1="0" y1="100" x2="240" y2="100" stroke="#f0e6d3" stroke-width="0.5"/>
+            <line x1="0" y1="120" x2="240" y2="120" stroke="#f0e6d3" stroke-width="0.5"/>
+            <line x1="0" y1="140" x2="240" y2="140" stroke="#f0e6d3" stroke-width="0.5"/>
+            <line x1="40" y1="0" x2="40" y2="160" stroke="#f0e6d3" stroke-width="0.5"/>
+            <line x1="80" y1="0" x2="80" y2="160" stroke="#f0e6d3" stroke-width="0.5"/>
+            <line x1="120" y1="0" x2="120" y2="160" stroke="#f0e6d3" stroke-width="0.5"/>
+            <line x1="160" y1="0" x2="160" y2="160" stroke="#f0e6d3" stroke-width="0.5"/>
+            <line x1="200" y1="0" x2="200" y2="160" stroke="#f0e6d3" stroke-width="0.5"/>
+          </g>
+          <!-- 十字针：交叉十字图案 -->
+          <g opacity="0.9">
+            <!-- Row 1 -->
+            <line x1="42" y1="32" x2="58" y2="48" stroke="#27ae60" stroke-width="3" stroke-linecap="round"/>
+            <line x1="42" y1="48" x2="58" y2="32" stroke="#27ae60" stroke-width="3" stroke-linecap="round"/>
+            <line x1="82" y1="32" x2="98" y2="48" stroke="#2ecc71" stroke-width="3" stroke-linecap="round"/>
+            <line x1="82" y1="48" x2="98" y2="32" stroke="#2ecc71" stroke-width="3" stroke-linecap="round"/>
+            <line x1="122" y1="32" x2="138" y2="48" stroke="#27ae60" stroke-width="3" stroke-linecap="round"/>
+            <line x1="122" y1="48" x2="138" y2="32" stroke="#27ae60" stroke-width="3" stroke-linecap="round"/>
+            <line x1="162" y1="32" x2="178" y2="48" stroke="#2ecc71" stroke-width="3" stroke-linecap="round"/>
+            <line x1="162" y1="48" x2="178" y2="32" stroke="#2ecc71" stroke-width="3" stroke-linecap="round"/>
+            <!-- Row 2 -->
+            <line x1="42" y1="72" x2="58" y2="88" stroke="#2ecc71" stroke-width="3" stroke-linecap="round"/>
+            <line x1="42" y1="88" x2="58" y2="72" stroke="#2ecc71" stroke-width="3" stroke-linecap="round"/>
+            <line x1="82" y1="72" x2="98" y2="88" stroke="#27ae60" stroke-width="3" stroke-linecap="round"/>
+            <line x1="82" y1="88" x2="98" y2="72" stroke="#27ae60" stroke-width="3" stroke-linecap="round"/>
+            <line x1="122" y1="72" x2="138" y2="88" stroke="#2ecc71" stroke-width="3" stroke-linecap="round"/>
+            <line x1="122" y1="88" x2="138" y2="72" stroke="#2ecc71" stroke-width="3" stroke-linecap="round"/>
+            <line x1="162" y1="72" x2="178" y2="88" stroke="#27ae60" stroke-width="3" stroke-linecap="round"/>
+            <line x1="162" y1="88" x2="178" y2="72" stroke="#27ae60" stroke-width="3" stroke-linecap="round"/>
+            <!-- Row 3 -->
+            <line x1="42" y1="112" x2="58" y2="128" stroke="#27ae60" stroke-width="3" stroke-linecap="round"/>
+            <line x1="42" y1="128" x2="58" y2="112" stroke="#27ae60" stroke-width="3" stroke-linecap="round"/>
+            <line x1="82" y1="112" x2="98" y2="128" stroke="#2ecc71" stroke-width="3" stroke-linecap="round"/>
+            <line x1="82" y1="128" x2="98" y2="112" stroke="#2ecc71" stroke-width="3" stroke-linecap="round"/>
+            <line x1="122" y1="112" x2="138" y2="128" stroke="#27ae60" stroke-width="3" stroke-linecap="round"/>
+            <line x1="122" y1="128" x2="138" y2="112" stroke="#27ae60" stroke-width="3" stroke-linecap="round"/>
+            <line x1="162" y1="112" x2="178" y2="128" stroke="#2ecc71" stroke-width="3" stroke-linecap="round"/>
+            <line x1="162" y1="128" x2="178" y2="112" stroke="#2ecc71" stroke-width="3" stroke-linecap="round"/>
+          </g>
+          <text x="120" y="152" text-anchor="middle" fill="#c9a96e" font-size="11" font-family="serif" opacity="0.7">十字针 — 交叉成字</text>
+        </svg>
+      </div>
+      <div class="info">
+        <div class="num">肆</div>
+        <h4>十字针 · 十字绣</h4>
+        <p>两针交叉成"十"字形。先绣同一方向的斜线，完成一行后再反方向绣另一斜线覆盖。针迹整齐划一，常用于几何纹样与文字图案。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 底部 CTA -->
+<section class="footer-cta" id="workshop">
+  <h3 class="fade-up">准备好亲手体验了吗？</h3>
+  <p class="fade-up">进入刺绣手势工坊，用指尖触碰千年技艺的温度</p>
+  <a href="workshop.html" class="cta fade-up">🪡 进入刺绣工坊</a>
+</section>
+
+<footer class="footer-note">
+  民间工艺 · 刺绣手势交互工坊 &copy; 2026
+</footer>
 
 <script>
-// ============================================================
-// 刺绣手势交互工坊 — 核心渲染（不依赖 MediaPipe）
-// ============================================================
-
-// --- Canvas roundRect polyfill ---
-if (!CanvasRenderingContext2D.prototype.roundRect) {
-  CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
-    if (typeof r === 'number') r = { tl: r, tr: r, br: r, bl: r };
-    this.moveTo(x + r.tl, y);
-    this.lineTo(x + w - r.tr, y);
-    this.quadraticCurveTo(x + w, y, x + w, y + r.tr);
-    this.lineTo(x + w, y + h - r.br);
-    this.quadraticCurveTo(x + w, y + h, x + w - r.br, y + h);
-    this.lineTo(x + r.bl, y + h);
-    this.quadraticCurveTo(x, y + h, x, y + h - r.bl);
-    this.lineTo(x, y + r.tl);
-    this.quadraticCurveTo(x, y, x + r.tl, y);
-  };
-}
-
-
-// --- 主应用 ---
-const canvas = document.getElementById('mainCanvas');
-const ctx = canvas.getContext('2d');
-const stage = document.getElementById('mainStage');
-
-// 刺绣状态
-const embroidery = {
-  stitches: [],       // {x, y, type, color}
-  currentStitch: 'running',
-  needle: { x: 400, y: 250 },
-  threadColor: '#c0392b',
-  maxStitches: 80,    // 最多保留针数
-  clothReveal: 0,     // 成品图浮现进度 0~1
-  completionShown: false,
-  guidedPath: [],     // 引导式刺绣路径 [{x,y}]
-  guidedIndex: 0      // 当前绣到第几个引导点
-};
-
-// 预加载莲花刺绣成品图
-const clothImage = new Image();
-clothImage.src = 'lotus-finish.jpg';
-
-// 图片加载完成后生成刺绣引导路径
-clothImage.onload = () => {
-  generateGuidedPath();
-};
-
-// 从图片提取纹样轮廓 → 生成刺绣引导路径
-function generateGuidedPath() {
-  // 用离屏 canvas 采样图片
-  const sampleW = 180;
-  const sampleH = Math.round(sampleW * clothImage.naturalHeight / clothImage.naturalWidth);
-  const offCanvas = document.createElement('canvas');
-  offCanvas.width = sampleW;
-  offCanvas.height = sampleH;
-  const offCtx = offCanvas.getContext('2d');
-  offCtx.drawImage(clothImage, 0, 0, sampleW, sampleH);
-
-  const imgData = offCtx.getImageData(0, 0, sampleW, sampleH);
-  const pixels = imgData.data;
-
-  const rawPoints = [];
-  // 采样每个像素，提取非白色区域（纹样轮廓）
-  const step = 3; // 每 3 像素采样一次
-  for (let y = 0; y < sampleH; y += step) {
-    for (let x = 0; x < sampleW; x += step) {
-      const idx = (y * sampleW + x) * 4;
-      const r = pixels[idx], g = pixels[idx + 1], b = pixels[idx + 2];
-      const gray = 0.299 * r + 0.587 * g + 0.114 * b;
-      // 暗色/彩色 = 纹样区域（阈值 < 190 表示非白色背景）
-      if (gray < 190) {
-        rawPoints.push({ x, y });
-      }
-    }
-  }
-
-  if (rawPoints.length < 5) return; // 图片太亮，无有效纹样
-
-  // 按从上到下、从左到右排序 → 形成连续的刺绣路径
-  rawPoints.sort((a, b) => {
-    const rowA = Math.floor(a.y / 8); // 按 8px 行分组
-    const rowB = Math.floor(b.y / 8);
-    if (rowA !== rowB) return rowA - rowB;
-    // 偶数行从左到右，奇数行从右到左（蛇形走线，模拟手工刺绣）
-    return (rowA % 2 === 0) ? a.x - b.x : b.x - a.x;
+// 滚动入场动画
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) e.target.classList.add('visible');
   });
+}, { threshold: 0.15 });
 
-  // 稀疏化：每 N 个点取一个，控制总针数
-  const spacing = Math.max(1, Math.floor(rawPoints.length / 60));
-  const path = [];
-  for (let i = 0; i < rawPoints.length; i += spacing) {
-    // 将采样坐标映射到绣布区域
-    const clothX = cx_for_path(sampleW, rawPoints[i].x);
-    const clothY = cy_for_path(sampleH, rawPoints[i].y);
-    path.push({ x: clothX, y: clothY });
-  }
+document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
 
-  embroidery.guidedPath = path;
-  embroidery.guidedIndex = 0;
-  console.log('🧵 引导路径已生成：' + path.length + ' 个刺绣点');
-}
-
-// 路径坐标映射（需在 draw 的 cloth 坐标系中使用）
-function cx_for_path(sw, sx) {
-  const w = canvas.width, cx = w/2, r = Math.min(cx, canvas.height/2) * 0.78;
-  return cx - r + (sx / sw) * r * 2;
-}
-function cy_for_path(sh, sy) {
-  const w = canvas.width, h = canvas.height, cx = w/2, cy = h/2, r = Math.min(cx, cy) * 0.78;
-  return cy - r * 0.8 + (sy / sh) * r * 1.6;
-}
-
-const stitchNames = { running:'平针绣', back:'回针绣', chain:'锁链针', cross:'十字针' };
-const stitchInfo = {
-  running: { title:'平针绣（齐针）', desc:'线条排列整齐均匀，针脚长短一致，不重叠不露底。从纹样一端到另一端用直线绣成。' },
-  back:    { title:'回针绣（倒针）', desc:'每针向后倒退半步距离，下一针从上一针尾部起针。线迹紧密连续，如缝纫机走线般结实。' },
-  chain:   { title:'锁链针（链绣）', desc:'绣线在针下绕圈后抽出，形成环环相扣的锁链效果。线条圆润饱满，装饰性强。' },
-  cross:   { title:'十字针（十字绣）', desc:'两针交叉成"十"字形。X方向绣完一行后再绣/方向覆盖。常用于几何纹样与文字。' }
-};
-
-let animTime = 0;
-let cameraOn = false;
-let handLandmarker = null;
-let lastVideoTime = -1;
-let gestureState = { pinching: false, pinchCount: 0, pinchX: 0, pinchY: 0, openCount: 0, lastPinchX: null, lastPinchY: null, pinchCooldown: 0, openCooldown: 0 };
-let fps = 0, frameCount = 0, lastFpsTime = performance.now();
-let toastTimer = null;
-
-// --- 初始化 ---
-function resize() {
-  canvas.width = stage.clientWidth;
-  canvas.height = stage.clientHeight;
-  embroidery.needle.x = canvas.width * 0.5;
-  embroidery.needle.y = canvas.height * 0.45;
-}
-resize();
-window.addEventListener('resize', resize);
-
-// --- 键盘 ---
-document.addEventListener('keydown', e => {
-  const k = e.key.toLowerCase();
-  if (k === 'e') {
-    addStitch(canvas.width * 0.35 + Math.random() * canvas.width * 0.3,
-              canvas.height * 0.3 + Math.random() * canvas.height * 0.4);
-    showToast('🧵 绣下一针 — ' + stitchNames[embroidery.currentStitch]);
-  } else if (k === 'r') {
-    embroidery.stitches = [];
-    embroidery.clothReveal = 0;
-    embroidery.completionShown = false;
-    embroidery.guidedIndex = 0;
-    updateStitchCount();
-    showToast('🖐️ 绣布已清空');
-  } else if (k >= '1' && k <= '4') {
-    const types = ['running','back','chain','cross'];
-    embroidery.currentStitch = types[parseInt(k)-1];
-    updateStitchIndicator();
-    showToast('🪡 切换到：' + stitchNames[embroidery.currentStitch]);
-  } else if (k === ' ') {
-    e.preventDefault();
-    toggleCamera();
-  }
-});
-
-// --- Canvas 点击绣针 ---
-canvas.addEventListener('click', e => {
-  const rect = canvas.getBoundingClientRect();
-  const sx = (e.clientX - rect.left) / rect.width * canvas.width;
-  const sy = (e.clientY - rect.top) / rect.height * canvas.height;
-  // 检查是否在绣布区域内（严格边界）
-  const cx = canvas.width/2, cy = canvas.height/2;
-  const r = Math.min(cx, cy) * 0.78;
-  const clothL = cx - r, clothR = cx + r;
-  const clothT = cy - r*0.8, clothB = cy + r*0.8;
-  if (sx > clothL && sx < clothR && sy > clothT && sy < clothB) {
-    addStitch(sx, sy);
-    showToast('🧵 点击落针 — ' + stitchNames[embroidery.currentStitch]);
-  }
-});
-
-function addStitch(x, y) {
-  // 钳制在绣布边框内
-  const w = canvas.width, h = canvas.height;
-  const cx = w/2, cy = h/2;
-  const r = Math.min(cx, cy) * 0.78;
-  const clothL = cx - r + 10, clothR = cx + r - 10;
-  const clothT = cy - r*0.8 + 10, clothB = cy + r*0.8 - 10;
-  x = Math.max(clothL, Math.min(clothR, x));
-  y = Math.max(clothT, Math.min(clothB, y));
-
-  // 引导模式：自动定位到路径上的下一个点
-  const path = embroidery.guidedPath;
-  if (path.length > 0 && embroidery.guidedIndex < path.length) {
-    const pt = path[embroidery.guidedIndex];
-    x = pt.x;
-    y = pt.y;
-    embroidery.guidedIndex++;
-  }
-
-  embroidery.needle.x = x;
-  embroidery.needle.y = y;
-  embroidery.stitches.push({ x, y, type: embroidery.currentStitch, color: embroidery.threadColor });
-  if (embroidery.stitches.length > embroidery.maxStitches) embroidery.stitches.shift();
-  updateStitchCount();
-
-  // 成品图浮现：5针起现，8针完全浮现
-  const total = embroidery.stitches.length;
-  if (total >= 5) {
-    embroidery.clothReveal = Math.min(1, (total - 5) / 3);
-    if (!embroidery.completionShown && total >= 5) {
-      embroidery.completionShown = true;
-      showToast('🌸 莲花刺绣初现！继续绣制让它更清晰…');
-    }
-    if (total >= 8 && embroidery.clothReveal >= 0.99) {
-      embroidery.clothReveal = 1;
-      showToast('🎉 莲花刺绣完成！精美成品浮现绣布');
-    }
-  }
-
-  // 随机换线色
-  const colors = ['#c0392b','#e74c3c','#f39c12','#27ae60','#2980b9','#8e44ad','#d35400','#16a085'];
-  if (Math.random() < 0.25) embroidery.threadColor = colors[Math.floor(Math.random()*colors.length)];
-}
-
-function updateStitchCount() {
-  const path = embroidery.guidedPath;
-  if (path.length > 0) {
-    document.getElementById('stitchCount').textContent =
-      `已绣：${embroidery.stitches.length} 针 / 路径 ${path.length} 点 (${embroidery.guidedIndex}/${path.length})`;
-  } else {
-    document.getElementById('stitchCount').textContent = `已绣：${embroidery.stitches.length} 针`;
-  }
-}
-
-function updateStitchIndicator() {
-  ['running','back','chain','cross'].forEach((t,i) => {
-    const el = document.getElementById('sd-'+t);
-    if (el) el.classList.toggle('current', t===embroidery.currentStitch);
+// 初始可见元素立即显示
+setTimeout(() => {
+  document.querySelectorAll('.fade-up').forEach(el => {
+    const rect = el.getBoundingClientRect();
+    if (rect.top < window.innerHeight) el.classList.add('visible');
   });
-  const info = stitchInfo[embroidery.currentStitch];
-  document.getElementById('currentStitchInfo').innerHTML = `<h4>🪡 当前针法：${info.title}</h4><p>${info.desc}</p>`;
-}
-
-// --- Toast ---
-function showToast(msg) {
-  const el = document.getElementById('gestureToast');
-  el.textContent = msg;
-  el.classList.add('show');
-  if (toastTimer) clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 1800);
-}
-
-// --- 摄像头 / HandLandmarker ---
-async function toggleCamera() {
-  if (cameraOn) { stopCamera(); return; }
-  await startCamera();
-}
-
-function updateCamBadge(state, text) {
-  const badge = document.getElementById('camBadge');
-  badge.className = 'camera-badge ' + state;
-  badge.textContent = text;
-}
-
-async function startCamera() {
-  const statusEl = document.getElementById('camStatus');
-  const gestureEl = document.getElementById('gestureStatus');
-  const video = document.getElementById('camVideo');
-  const preview = document.getElementById('cameraPreview');
-  const btn = document.getElementById('cameraBtn');
-
-  try {
-    // 1. 获取摄像头 — 立即显示画面
-    updateCamBadge('loading', '📷 获取摄像头…');
-    statusEl.textContent = '摄像头：正在获取…';
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { width:640, height:480, facingMode:'user' } });
-    video.srcObject = stream;
-    await video.play();
-
-    // 摄像头画面已经有了，先显示预览窗口
-    preview.classList.add('on');
-    btn.classList.add('live');
-    btn.textContent = '📷 关闭摄像头';
-    btn.classList.remove('off');
-    document.getElementById('camDot').classList.add('live');
-    cameraOn = true;  // 先标记为开，让画面可见
-    statusEl.textContent = '摄像头：画面已开，加载AI模型…';
-    gestureEl.textContent = '手势：模型加载中…';
-    updateCamBadge('loading', '⏳ 加载AI…');
-    showToast('📷 摄像头画面已开启，正在加载AI手势模型…');
-
-    // 2. 加载 MediaPipe 模型
-    let modelLoaded = false;
-    try {
-      const mpModule = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.18/+esm');
-      const vision = await mpModule.FilesetResolver.forVisionTasks(
-        'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.18/wasm'
-      );
-
-      // 尝试多个模型源
-      const modelURLs = [
-        'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',
-        'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.18/wasm/hand_landmarker.task'
-      ];
-
-      for (const modelUrl of modelURLs) {
-        try {
-          statusEl.textContent = '摄像头：尝试加载模型…';
-          handLandmarker = await mpModule.HandLandmarker.createFromOptions(vision, {
-            baseOptions: { modelAssetPath: modelUrl, delegate: 'GPU' },
-            runningMode: 'VIDEO', numHands: 1
-          });
-          modelLoaded = true;
-          console.log('✅ HandLandmarker 加载成功 (GPU):', modelUrl);
-          break;
-        } catch(gpuErr) {
-          console.warn('GPU 失败，尝试 CPU:', modelUrl, gpuErr.message);
-          try {
-            handLandmarker = await mpModule.HandLandmarker.createFromOptions(vision, {
-              baseOptions: { modelAssetPath: modelUrl, delegate: 'CPU' },
-              runningMode: 'VIDEO', numHands: 1
-            });
-            modelLoaded = true;
-            console.log('✅ HandLandmarker 加载成功 (CPU):', modelUrl);
-            break;
-          } catch(cpuErr) {
-            console.warn('模型源失败:', modelUrl, cpuErr.message);
-          }
-        }
-      }
-    } catch(mpErr) {
-      console.error('MediaPipe 加载失败:', mpErr);
-    }
-
-    if (modelLoaded) {
-      statusEl.textContent = '摄像头：AI手势识别中 ✅';
-      gestureEl.textContent = '手势：等待检测…';
-      updateCamBadge('on', '🤖 AI手势 ✓');
-      showToast('🤖 AI手势模型就绪 — 把手放到摄像头前');
-      detectLoop(video);
-    } else {
-      statusEl.textContent = '摄像头：仅画面（AI模型未加载）';
-      gestureEl.textContent = '手势：不可用（模型加载失败）';
-      updateCamBadge('error', '⚠️ 仅画面');
-      showToast('⚠️ AI模型加载失败 — 摄像头画面正常，手势功能不可用');
-    }
-
-  } catch(e) {
-    console.error('摄像头启动失败:', e);
-    cameraOn = false;
-    preview.classList.remove('on');
-    btn.classList.remove('live');
-    btn.classList.add('off');
-    let errMsg = e.name === 'NotAllowedError' ? '摄像头权限被拒绝'
-               : e.name === 'NotFoundError' ? '未检测到摄像头设备'
-               : e.name === 'NotReadableError' ? '摄像头被其他应用占用'
-               : (e.message || '未知错误');
-    if (errMsg.length > 30) errMsg = errMsg.substring(0,30) + '…';
-    statusEl.textContent = `摄像头：失败 — ${errMsg}`;
-    gestureEl.textContent = '手势：—';
-    updateCamBadge('error', '❌ ' + errMsg);
-    showToast(`⚠️ ${errMsg}`);
-  }
-}
-
-function stopCamera() {
-  cameraOn = false;
-  const video = document.getElementById('camVideo');
-  if (video.srcObject) {
-    video.srcObject.getTracks().forEach(t => t.stop());
-    video.srcObject = null;
-  }
-  handLandmarker = null;
-  document.getElementById('cameraPreview').classList.remove('on');
-  const btn = document.getElementById('cameraBtn');
-  btn.textContent = '📷 开启摄像头手势识别';
-  btn.classList.remove('live');
-  btn.classList.add('off');
-  document.getElementById('camDot').classList.remove('live');
-  document.getElementById('camStatus').textContent = '摄像头：未启动';
-  document.getElementById('gestureStatus').textContent = '手势：—';
-  updateCamBadge('off', '📷 摄像头关闭');
-  showToast('摄像头已关闭');
-}
-
-// --- 手势检测循环 (基于 HandLandmarker) ---
-let detectFrameCount = 0;
-let detectTimer = 0;
-
-// 手部关键点连线
-const HAND_CONNECTIONS = [
-  [0,1],[1,2],[2,3],[3,4],       // 拇指
-  [0,5],[5,6],[6,7],[7,8],       // 食指
-  [0,9],[9,10],[10,11],[11,12],  // 中指
-  [0,13],[13,14],[14,15],[15,16],// 无名指
-  [0,17],[17,18],[18,19],[19,20],// 小指
-  [5,9],[9,13],[13,17]            // 掌心连线
-];
-
-async function detectLoop(video) {
-  if (!cameraOn) return;
-
-  try {
-    if (video.readyState >= 2 && video.currentTime !== lastVideoTime) {
-      lastVideoTime = video.currentTime;
-      detectFrameCount++;
-      const results = handLandmarker.detectForVideo(video, performance.now());
-
-      // 每秒更新一次检测状态
-      const now = performance.now();
-      if (now - detectTimer > 1000) {
-        detectTimer = now;
-        document.getElementById('gestureStatus').textContent =
-          `手势：检测运行中 (${detectFrameCount}fps)${results.landmarks&&results.landmarks.length>0 ? ' ✓检测到手' : ' ✗未检测到手'}`;
-        detectFrameCount = 0;
-      }
-
-      // 绘制手势骨骼到预览窗
-      const overlay = document.getElementById('camOverlay');
-      const octx = overlay.getContext('2d');
-      octx.clearRect(0, 0, overlay.width, overlay.height);
-
-      if (results.landmarks && results.landmarks.length > 0) {
-        const lm = results.landmarks[0];
-
-        // 绘制连线
-        octx.strokeStyle = '#00ff88'; octx.lineWidth = 2; octx.lineCap = 'round';
-        HAND_CONNECTIONS.forEach(([a,b]) => {
-          octx.beginPath();
-          octx.moveTo(lm[a].x * overlay.width, lm[a].y * overlay.height);
-          octx.lineTo(lm[b].x * overlay.width, lm[b].y * overlay.height);
-          octx.stroke();
-        });
-
-        // 绘制关键点
-        lm.forEach((kp, i) => {
-          const x = kp.x * overlay.width, y = kp.y * overlay.height;
-          octx.fillStyle = i === 4 || i === 8 ? '#ff4466' : '#00ff88';
-          octx.beginPath(); octx.arc(x, y, i === 4 || i === 8 ? 5 : 3, 0, Math.PI*2); octx.fill();
-          octx.fillStyle = '#fff';
-          octx.beginPath(); octx.arc(x, y, i === 4 || i === 8 ? 2.5 : 1.5, 0, Math.PI*2); octx.fill();
-        });
-
-        // 拇指尖(4) 食指尖(8) 腕(0)
-        const thumb = lm[4], index = lm[8], wrist = lm[0];
-        const pinchDist = Math.hypot(thumb.x - index.x, thumb.y - index.y);
-
-        // 手指伸直度
-        let openness = 0;
-        [8,12,16,20].forEach((tipIdx,i) => {
-          const mcpIdx = [5,9,13,17][i];
-          const td = Math.hypot(lm[tipIdx].x-wrist.x, lm[tipIdx].y-wrist.y);
-          const md = Math.hypot(lm[mcpIdx].x-wrist.x, lm[mcpIdx].y-wrist.y);
-          if (td > md*1.2) openness += 0.25;
-        });
-
-        // --- 手指坐标映射到绣布区域（带镜像翻转） ---
-        const w = canvas.width, h = canvas.height;
-        const cx = w/2, cy = h/2;
-        const r = Math.min(cx, cy) * 0.78;
-        // 绣布区域：x∈[cx-r, cx+r], y∈[cy-r*0.8, cy+r*0.8]
-        // index.x 镜像翻转：(1-x) 使得手在摄像头左边 → 绣布左边
-        let clothX = cx - r + (1 - index.x) * r*2;
-        let clothY = cy - r*0.8 + index.y * r*1.6;
-        // 严格钳制在绣布边框内
-        const clothL = cx - r + 10, clothR = cx + r - 10;
-        const clothT = cy - r*0.8 + 10, clothB = cy + r*0.8 - 10;
-        clothX = Math.max(clothL, Math.min(clothR, clothX));
-        clothY = Math.max(clothT, Math.min(clothB, clothY));
-        // 实时更新绣针位置（手在哪儿针在哪儿）
-        embroidery.needle.x = clothX;
-        embroidery.needle.y = clothY;
-
-        // --- 手势判断（灵敏度已优化） ---
-        const isPinching = pinchDist < 0.10;    // 放宽捏合距离阈值
-        const isOpen = openness > 0.70;           // 降低张开判定阈值
-
-        // 捏合→落针
-        if (isPinching && gestureState.pinchCooldown <= 0) {
-          gestureState.pinchCount++;
-          gestureState.pinching = true;
-          gestureState.pinchX = index.x;
-          gestureState.pinchY = index.y;
-          if (gestureState.pinchCount >= 8) {    // 减少所需帧数：18→8
-            gestureState.pinchCooldown = 20;     // 触发后冷却 20 帧，防止连击
-            gestureState.pinchCount = 0;
-            const types = ['running','back','chain','cross'];
-            const idx = types.indexOf(embroidery.currentStitch);
-            embroidery.currentStitch = types[(idx+1)%4];
-            updateStitchIndicator();
-            addStitch(clothX, clothY);
-            showToast('🤏 捏合落针 → ' + stitchNames[embroidery.currentStitch]);
-            document.getElementById('gestureStatus').textContent = '手势：捏合落针 ✅';
-            flashCard('gc-thread');
-          }
-        } else {
-          gestureState.pinchCount = Math.max(0, gestureState.pinchCount - 1);
-          gestureState.pinching = false;
-        }
-        if (gestureState.pinchCooldown > 0) gestureState.pinchCooldown--;
-
-        // 张开手掌→清空
-        if (isOpen && gestureState.openCooldown <= 0) {
-          gestureState.openCount++;
-          if (gestureState.openCount >= 20) {    // 减少所需帧数：40→20（约0.7秒）
-            gestureState.openCooldown = 40;      // 冷却
-            gestureState.openCount = 0;
-            embroidery.stitches = [];
-            embroidery.clothReveal = 0;
-            embroidery.completionShown = false;
-            embroidery.guidedIndex = 0;
-            updateStitchCount();
-            showToast('🖐️ 手掌张开 — 绣布已清空');
-            flashCard('gc-open');
-          }
-        } else {
-          gestureState.openCount = Math.max(0, gestureState.openCount - 1);
-        }
-        if (gestureState.openCooldown > 0) gestureState.openCooldown--;
-      }
-    }
-  } catch(e) {
-    console.warn('检测循环出错:', e);
-    document.getElementById('gestureStatus').textContent = '手势：检测出错，重试中…';
-  }
-
-  requestAnimationFrame(() => detectLoop(video));
-}
-
-function flashCard(id) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.classList.add('triggered');
-  const dot = el.querySelector('.status-dot');
-  if (dot) dot.classList.add('live');
-  setTimeout(() => {
-    el.classList.remove('triggered');
-    if (dot) dot.classList.remove('live');
-  }, 600);
-}
-
-// --- 渲染 ---
-function draw() {
-  try {
-    animTime += 0.016;
-    frameCount++;
-    const now = performance.now();
-    if (now - lastFpsTime >= 1000) {
-      fps = frameCount;
-      frameCount = 0;
-      lastFpsTime = now;
-      const fpsEl = document.getElementById('fpsDisplay');
-      if (fpsEl) fpsEl.textContent = `FPS: ${fps}`;
-    }
-
-    const w = canvas.width, h = canvas.height;
-    const cx = w/2, cy = h/2;
-    const r = Math.min(cx, cy) * 0.78;
-
-    ctx.clearRect(0, 0, w, h);
-
-    // 阴影背景装饰
-    const shadowGrad = ctx.createRadialGradient(cx, cy, r*0.2, cx, cy, r*1.4);
-    shadowGrad.addColorStop(0, 'rgba(201,169,110,0.06)');
-    shadowGrad.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = shadowGrad;
-    ctx.beginPath(); ctx.ellipse(cx, cy, r*1.3, r*1.1, 0, 0, Math.PI*2); ctx.fill();
-
-    // 绣布
-    ctx.fillStyle = '#faf5ee';
-    ctx.beginPath(); ctx.roundRect(cx-r, cy-r*0.8, r*2, r*1.6, 10); ctx.fill();
-    ctx.strokeStyle = '#d4c5b0'; ctx.lineWidth = 2; ctx.stroke();
-
-    // 绣布纹理网格
-    ctx.strokeStyle = 'rgba(200,180,160,0.25)'; ctx.lineWidth = 0.4;
-    for (let x = cx-r+25; x < cx+r; x += 14) { ctx.beginPath(); ctx.moveTo(x, cy-r*0.8+25); ctx.lineTo(x, cy+r*0.8-25); ctx.stroke(); }
-    for (let y = cy-r*0.8+25; y < cy+r*0.8; y += 14) { ctx.beginPath(); ctx.moveTo(cx-r+25, y); ctx.lineTo(cx+r-25, y); ctx.stroke(); }
-
-    // 莲花刺绣成品图（随针数渐显）
-    if (embroidery.clothReveal > 0 && clothImage.complete && clothImage.naturalWidth > 0) {
-      ctx.save();
-      ctx.beginPath();
-      ctx.roundRect(cx-r, cy-r*0.8, r*2, r*1.6, 10);
-      ctx.clip();
-      ctx.globalAlpha = embroidery.clothReveal * 0.92;  // 最大92%不透明，保留绣布质感
-      const imgAspect = clothImage.naturalWidth / clothImage.naturalHeight;
-      const clothAspect = (r*2) / (r*1.6);
-      let iw, ih;
-      if (imgAspect > clothAspect) {
-        iw = r*2; ih = (r*2) / imgAspect;
-      } else {
-        ih = r*1.6; iw = r*1.6 * imgAspect;
-      }
-      ctx.drawImage(clothImage, cx - iw/2, cy - ih/2, iw, ih);
-      ctx.globalAlpha = 1;
-      ctx.restore();
-    }
-
-    // 绣框/绷子
-    const hoopR = r*0.72;
-    ctx.strokeStyle = '#8b7355'; ctx.lineWidth = 5;
-    ctx.beginPath(); ctx.ellipse(cx, cy, hoopR, hoopR*0.72, 0, 0, Math.PI*2); ctx.stroke();
-    ctx.strokeStyle = '#a0845c'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.ellipse(cx, cy, hoopR+2, hoopR*0.72+2, 0, 0, Math.PI*2); ctx.stroke();
-
-    // 绘制已绣针迹
-    for (const s of embroidery.stitches) {
-      ctx.fillStyle = s.color;
-      switch (s.type) {
-        case 'running':
-          ctx.fillRect(s.x-7, s.y-1.5, 14, 3);
-          break;
-        case 'back':
-          ctx.fillRect(s.x-9, s.y-2, 18, 4);
-          ctx.fillStyle = 'rgba(255,255,255,0.3)';
-          ctx.fillRect(s.x-3, s.y-1, 6, 2);
-          break;
-        case 'chain':
-          ctx.fillStyle = s.color;
-          ctx.beginPath(); ctx.arc(s.x, s.y, 5.5, 0, Math.PI*2); ctx.fill();
-          ctx.fillStyle = 'rgba(255,255,255,0.4)';
-          ctx.beginPath(); ctx.arc(s.x, s.y, 2.5, 0, Math.PI*2); ctx.fill();
-          break;
-        case 'cross':
-          ctx.fillStyle = s.color;
-          ctx.save(); ctx.translate(s.x, s.y); ctx.rotate(Math.PI/4);
-          ctx.fillRect(-6,-1.5,12,3); ctx.fillRect(-1.5,-6,3,12);
-          ctx.restore();
-          break;
-      }
-    }
-
-    // 引导路径：下一针闪烁指示
-    const path = embroidery.guidedPath;
-    if (path.length > 0 && embroidery.guidedIndex < path.length) {
-      const nextPt = path[embroidery.guidedIndex];
-      const pulse = 0.4 + 0.6 * Math.abs(Math.sin(animTime * 4));
-      ctx.strokeStyle = `rgba(201,169,110,${pulse})`;
-      ctx.lineWidth = 2;
-      ctx.setLineDash([3, 3]);
-      ctx.beginPath(); ctx.arc(nextPt.x, nextPt.y, 10 + pulse * 4, 0, Math.PI * 2); ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.fillStyle = `rgba(201,169,110,${pulse})`;
-      ctx.beginPath(); ctx.arc(nextPt.x, nextPt.y, 4, 0, Math.PI * 2); ctx.fill();
-      // 从上一针到下一针的虚线引导
-      if (embroidery.stitches.length > 0) {
-        const prev = embroidery.stitches[embroidery.stitches.length - 1];
-        ctx.strokeStyle = `rgba(201,169,110,0.3)`;
-        ctx.setLineDash([2, 6]);
-        ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(prev.x, prev.y); ctx.lineTo(nextPt.x, nextPt.y); ctx.stroke();
-        ctx.setLineDash([]);
-      }
-    }
-
-    // 绣针动画
-    const nd = embroidery.needle;
-    const nx = nd.x + Math.sin(animTime*6)*2;
-    const ny = nd.y + Math.cos(animTime*5)*1.5;
-    ctx.strokeStyle = '#777'; ctx.lineWidth = 1.8;
-    ctx.beginPath(); ctx.moveTo(nx, ny-18); ctx.lineTo(nx, ny+12); ctx.stroke();
-    ctx.fillStyle = '#ddd'; ctx.beginPath(); ctx.arc(nx, ny-12, 3, 0, Math.PI*2); ctx.fill();
-    // 线
-    const last = embroidery.stitches.length>0 ? embroidery.stitches[embroidery.stitches.length-1] : nd;
-    ctx.strokeStyle = embroidery.threadColor; ctx.lineWidth = 1.2;
-    ctx.setLineDash([3,2]);
-    ctx.beginPath(); ctx.moveTo(nx, ny-12);
-    ctx.quadraticCurveTo(nx+8, ny, last.x, last.y); ctx.stroke();
-    ctx.setLineDash([]);
-
-    // 底部标签
-    ctx.fillStyle = '#c0392b'; ctx.font = 'bold 16px "STSong","SimSun",serif'; ctx.textAlign = 'center';
-    ctx.fillText(`🧵 ${stitchNames[embroidery.currentStitch]}`, cx, h*0.91);
-    ctx.fillStyle = '#8a7e6b'; ctx.font = '11px sans-serif';
-    ctx.fillText(`点击绣布落针  |  键盘E绣一针  |  手指捏合切换针法`, cx, h*0.945);
-  } catch(e) {
-    console.warn('渲染出错但继续:', e);
-  }
-  requestAnimationFrame(draw);
-}
-
-// --- 启动 ---
-updateStitchIndicator();
-draw();
-console.log('🧵 刺绣手势交互工坊已就绪');
-console.log('  手势：捏合→绣针 | 张开→清空 | 键盘：E绣针 1-4针法 R清空 | 点击绣布落针');
-console.log('  空格键开启/关闭摄像头实时手势识别');
+}, 200);
 </script>
 
 </body>

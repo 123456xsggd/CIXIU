@@ -325,6 +325,8 @@ function generateGuidedPath() {
     const imgData = offCtx.getImageData(0, 0, sampleW, sampleH);
     const pixels = imgData.data;
 
+    // 第一遍：严格采样只取图案像素
+    const patternMask = new Uint8Array(sampleW * sampleH); // 1=图案, 0=背景
     for (let y = 0; y < sampleH; y += step) {
       for (let x = 0; x < sampleW; x += step) {
         const idx = (y * sampleW + x) * 4;
@@ -332,8 +334,28 @@ function generateGuidedPath() {
         const gray = 0.299 * r + 0.587 * g + 0.114 * b;
         const maxC = Math.max(r,g,b), minC = Math.min(r,g,b);
         const saturation = maxC > 0 ? (maxC - minC) / maxC : 0;
-        if (gray < 210 || (saturation > 0.08 && gray < 230)) {
-          rawPoints.push({ x, y, r, g, b });
+        // 严格阈值：只有明显属于图案的像素才纳入（亮度低 或 饱和度高）
+        const isPattern = gray < 155 || (saturation > 0.15 && gray < 190);
+        if (isPattern) {
+          patternMask[y * sampleW + x] = 1;
+        }
+      }
+    }
+    // 第二遍：去噪 — 孤立点（周围8邻域内无其他图案点）剔除
+    const dirs = [-1,-1,0,-1,1,-1,-1,0,1,0,-1,1,0,1,1,1];
+    for (let y = 0; y < sampleH; y += step) {
+      for (let x = 0; x < sampleW; x += step) {
+        if (!patternMask[y * sampleW + x]) continue;
+        let neighbors = 0;
+        for (let d = 0; d < 8; d++) {
+          const nx = x + dirs[d*2] * step, ny = y + dirs[d*2+1] * step;
+          if (nx >= 0 && nx < sampleW && ny >= 0 && ny < sampleH && patternMask[ny * sampleW + nx]) {
+            neighbors++;
+          }
+        }
+        if (neighbors >= 2) {
+          const idx = (y * sampleW + x) * 4;
+          rawPoints.push({ x, y, r: pixels[idx], g: pixels[idx+1], b: pixels[idx+2] });
           if (x < minX) minX = x; if (x > maxX) maxX = x;
           if (y < minY) minY = y; if (y > maxY) maxY = y;
         }

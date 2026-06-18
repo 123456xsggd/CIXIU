@@ -258,14 +258,26 @@ const embroidery = {
   guidedIndex: 0      // 当前绣到第几个引导点
 };
 
-// 预加载莲花刺绣成品图
-const clothImage = new Image();
-clothImage.onload = () => { generateGuidedPath(); };
-// 如果图片已缓存（complete=true），onload 可能不触发，手动调用
-if (clothImage.complete && clothImage.naturalWidth > 0) {
-  generateGuidedPath();
+// --- 初始化 ---
+function resize() {
+  canvas.width = stage.clientWidth;
+  canvas.height = stage.clientHeight;
+  embroidery.needle.x = canvas.width * 0.5;
+  embroidery.needle.y = canvas.height * 0.45;
 }
-clothImage.src = 'lotus-finish.jpg';  // src 必须在 onload 之后设置
+resize();
+window.addEventListener('resize', resize);
+
+// 预加载莲花刺绣成品图（resize 后加载，确保 canvas 尺寸已就绪）
+const clothImage = new Image();
+clothImage.onload = () => {
+  console.log('📷 莲花底图加载成功, canvas=', canvas.width, 'x', canvas.height);
+  generateGuidedPath();
+};
+clothImage.onerror = () => {
+  console.error('❌ 莲花底图加载失败！');
+};
+clothImage.src = 'lotus-finish.jpg?v=20260618a';  // 版本号绕过缓存
 
 // 从图片提取纹样轮廓 → 生成刺绣引导路径
 function generateGuidedPath() {
@@ -387,16 +399,6 @@ let gestureState = { pinching: false, pinchCount: 0, pinchX: 0, pinchY: 0, openC
 let fps = 0, frameCount = 0, lastFpsTime = performance.now();
 let toastTimer = null;
 
-// --- 初始化 ---
-function resize() {
-  canvas.width = stage.clientWidth;
-  canvas.height = stage.clientHeight;
-  embroidery.needle.x = canvas.width * 0.5;
-  embroidery.needle.y = canvas.height * 0.45;
-}
-resize();
-window.addEventListener('resize', resize);
-
 // --- 键盘 ---
 document.addEventListener('keydown', e => {
   const k = e.key.toLowerCase();
@@ -438,7 +440,7 @@ canvas.addEventListener('click', e => {
   }
 });
 
-// 将 rgb(r,g,b) 颜色加深：根据色相微调，让相邻色相有更好区分度
+// 将 rgb(r,g,b) 颜色加深：提升饱和度，适度压暗，保留色相区分
 function deepenColor(cssRgb) {
   const m = cssRgb.match(/rgb\((\d+),(\d+),(\d+)\)/);
   if (!m) return cssRgb;
@@ -456,31 +458,32 @@ function deepenColor(cssRgb) {
     }
   }
 
-  // 按色相微调：红和黄在亮度/饱和度上错开，提升区分度
-  // 红色系 (hue ≈ 0 或 0.92~1): 深暗红，亮度压低
-  // 黄色系 (hue ≈ 0.11~0.18): 稍亮，偏橙金
-  // 绿色系 (hue ≈ 0.28~0.42): 深绿
-  // 蓝紫系 (hue ≈ 0.55~0.85): 深紫/蓝
-  const eps = 0.01;
-  if (h < 0.05 + eps || h > 0.92 - eps) {
-    // 红色系：深血红，亮度约 18~22%
-    s = Math.max(s, 0.95);
-    l = Math.min(Math.max(l, 0.18), 0.22);
-  } else if (h > 0.10 && h < 0.20) {
-    // 黄色系：偏红橙金，亮度约 28~32%，和红色在色相+亮度上双重错开
-    s = Math.max(s, 0.90);
-    l = Math.min(Math.max(l, 0.28), 0.32);
-    // 黄色往橙偏移，避免和红色太接近
-    h = Math.max(h, 0.08);
-  } else if (h > 0.27 && h < 0.43) {
-    // 绿色系：深绿，亮度 18~24%
-    s = Math.max(s, 0.90);
-    l = Math.min(Math.max(l, 0.18), 0.24);
+  // 判断色相区域，区分红色系、黄/橙系、绿色系、蓝/青系、其他
+  const hueDeg = h * 360;
+  const isRed = (hueDeg >= 330 || hueDeg < 15);      // 红
+  const isOrange = (hueDeg >= 15 && hueDeg < 45);    // 橙
+  const isYellow = (hueDeg >= 45 && hueDeg < 75);    // 黄
+  const isGreen = (hueDeg >= 75 && hueDeg < 160);    // 绿
+  const isCyan = (hueDeg >= 160 && hueDeg < 200);    // 青
+  const isBlue = (hueDeg >= 200 && hueDeg < 260);    // 蓝
+  const isPurple = (hueDeg >= 260 && hueDeg < 330);  // 紫
+
+  // 增强饱和度（不同色系保持不同饱和度）
+  if (isRed || isOrange) s = Math.max(s, 0.75);       // 红/橙更饱和
+  else if (isYellow) s = Math.max(s, 0.65);           // 黄稍微降饱和避免刺眼
+  else if (isGreen || isCyan) s = Math.max(s, 0.70);  // 绿/青适中
+  else s = Math.max(s, 0.68);                         // 蓝/紫等
+
+  // 亮度处理：根据原亮度按比例压暗，保留相对明暗层次
+  // 原亮度 < 0.5 的压到 35-45%，原亮度 > 0.5 的压到 45-55%
+  if (l < 0.5) {
+    // 深色区域：35%~45%
+    l = 0.35 + l * 0.2;
   } else {
-    // 其他色相：通用处理
-    s = Math.max(s, 0.88);
-    l = Math.min(l, 0.26);
+    // 浅色区域：45%~55%（不要太暗，否则蓝色变紫色、米色变土黄）
+    l = 0.45 + (l - 0.5) * 0.2;
   }
+  l = Math.max(0.30, Math.min(l, 0.55)); // 安全范围
 
   // hsl → rgb
   const q = l < 0.5 ? l*(1+s) : l+s-l*s;

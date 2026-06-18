@@ -315,92 +315,132 @@ function generateGuidedPath() {
   const offCtx = offCanvas.getContext('2d');
   offCtx.drawImage(clothImage, 0, 0, sampleW, sampleH);
 
-  const imgData = offCtx.getImageData(0, 0, sampleW, sampleH);
-  const pixels = imgData.data;
-
-  // ── 第一遍：密集采样 + 色彩感知检测 + 边界框记录（保留像素颜色） ──
+  // ── 尝试像素分析（file:// 协议下 getImageData 可能因安全策略失败） ──
+  let pixelAnalysisOk = false;
   const rawPoints = [];
   const step = 2;
   let minX = sampleW, maxX = 0, minY = sampleH, maxY = 0;
 
-  for (let y = 0; y < sampleH; y += step) {
-    for (let x = 0; x < sampleW; x += step) {
-      const idx = (y * sampleW + x) * 4;
-      const r = pixels[idx], g = pixels[idx + 1], b = pixels[idx + 2];
-      const gray = 0.299 * r + 0.587 * g + 0.114 * b;
-      const maxC = Math.max(r,g,b), minC = Math.min(r,g,b);
-      const saturation = maxC > 0 ? (maxC - minC) / maxC : 0;
-      if (gray < 210 || (saturation > 0.08 && gray < 230)) {
-        rawPoints.push({ x, y, r, g, b });
-        if (x < minX) minX = x; if (x > maxX) maxX = x;
-        if (y < minY) minY = y; if (y > maxY) maxY = y;
+  try {
+    const imgData = offCtx.getImageData(0, 0, sampleW, sampleH);
+    const pixels = imgData.data;
+
+    for (let y = 0; y < sampleH; y += step) {
+      for (let x = 0; x < sampleW; x += step) {
+        const idx = (y * sampleW + x) * 4;
+        const r = pixels[idx], g = pixels[idx + 1], b = pixels[idx + 2];
+        const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+        const maxC = Math.max(r,g,b), minC = Math.min(r,g,b);
+        const saturation = maxC > 0 ? (maxC - minC) / maxC : 0;
+        if (gray < 210 || (saturation > 0.08 && gray < 230)) {
+          rawPoints.push({ x, y, r, g, b });
+          if (x < minX) minX = x; if (x > maxX) maxX = x;
+          if (y < minY) minY = y; if (y > maxY) maxY = y;
+        }
       }
     }
-  }
-
-  if (rawPoints.length < 5) {
-    console.warn('⚠️ 纹样检测失败：仅' + rawPoints.length + '个采样点');
-    return;
-  }
-
-  // 纹样边界框中心
-  const patCx = (minX + maxX) / 2;
-  const patCy = (minY + maxY) / 2;
-  const patW = maxX - minX + step;
-  const patH = maxY - minY + step;
-  console.log('📐 纹样区域: ' + Math.round(patW) + 'x' + Math.round(patH) + 'px, 中心(' + Math.round(patCx) + ',' + Math.round(patCy) + '), 总采样' + rawPoints.length + '点');
-
-  // ── 第二遍：径向螺旋排序（围绕纹样中心） ──
-  rawPoints.forEach(p => { p.dist = Math.hypot(p.x - patCx, p.y - patCy); });
-  rawPoints.sort((a, b) => a.dist - b.dist);
-
-  const rings = [];
-  const ringWidth = step * 3;
-  let currentRing = [], ringStart = 0;
-  for (const pt of rawPoints) {
-    if (pt.dist - ringStart > ringWidth && currentRing.length > 0) {
-      rings.push(currentRing); currentRing = []; ringStart = pt.dist;
+    pixelAnalysisOk = rawPoints.length >= 5;
+    if (pixelAnalysisOk) {
+      console.log('✅ 像素分析成功: ' + rawPoints.length + ' 采样点');
+    } else {
+      console.warn('⚠️ 像素分析采样不足(' + rawPoints.length + '点)，启用降级方案');
     }
-    currentRing.push(pt);
+  } catch(e) {
+    console.warn('⚠️ getImageData 失败（可能是 file:// 安全限制）: ' + e.message + '，启用降级方案');
   }
-  if (currentRing.length > 0) rings.push(currentRing);
 
-  const orderedPoints = [];
-  rings.forEach((ring, ri) => {
-    ring.sort((a, b) => {
-      const aA = Math.atan2(a.y - patCy, a.x - patCx);
-      const bA = Math.atan2(b.y - patCy, b.x - patCx);
-      return ri % 2 === 0 ? aA - bA : bA - aA;
-    });
-    orderedPoints.push(...ring);
-  });
-
-  // ── 第三遍：稀疏化 + 映射到绣布（纹样居中缩放） ──
+  // ── 路径生成 ──
   const targetCount = 180;
-  const sp = Math.max(1, Math.floor(orderedPoints.length / targetCount));
-
-  // 绣布区域（与 draw 函数一致）
   const w = canvas.width, h = canvas.height;
   const ccx = w / 2, ccy = h / 2;
   const cr = Math.min(ccx, ccy) * 0.78;
   const pad = 15;
-  const cL = ccx - cr + pad, cR = ccx + cr - pad;
-  const cT = ccy - cr * 0.8 + pad, cB = ccy + cr * 0.8 - pad;
 
-  // 缩放：纹样填满绣布（取 min 保持宽高比）
-  const sc = Math.min((cR - cL) / patW, (cB - cT) / patH);
-  const ox = ccx - patCx * sc;
-  const oy = ccy - patCy * sc;
+  if (pixelAnalysisOk) {
+    // ── 纹样路径：蛇形扫描（从上到下逐行来回，覆盖整个纹样） ──
+    const patCx = (minX + maxX) / 2, patCy = (minY + maxY) / 2;
+    const patW = maxX - minX + step, patH = maxY - minY + step;
+    console.log('📐 纹样区域: ' + Math.round(patW) + 'x' + Math.round(patH) + 'px');
 
-  const path = [];
-  for (let i = 0; i < orderedPoints.length; i += sp) {
-    const p = orderedPoints[i];
-    path.push({ x: p.x * sc + ox, y: p.y * sc + oy, color: `rgb(${p.r},${p.g},${p.b})` });
+    // 按 Y 坐标排序，再按行分组
+    rawPoints.sort((a, b) => a.y - b.y);
+    const rowHeight = step * 2;
+    const rows = [];
+    let currentRow = [], rowStartY = rawPoints[0] ? rawPoints[0].y : 0;
+    for (const pt of rawPoints) {
+      if (pt.y - rowStartY > rowHeight && currentRow.length > 0) {
+        rows.push(currentRow); currentRow = []; rowStartY = pt.y;
+      }
+      currentRow.push(pt);
+    }
+    if (currentRow.length > 0) rows.push(currentRow);
+
+    // 蛇形：奇数行从左到右，偶数行从右到左
+    const orderedPoints = [];
+    rows.forEach((row, ri) => {
+      row.sort((a, b) => a.x - b.x);
+      if (ri % 2 === 1) row.reverse();
+      orderedPoints.push(...row);
+    });
+
+    const sp = Math.max(1, Math.floor(orderedPoints.length / targetCount));
+    const cL = ccx - cr + pad, cR = ccx + cr - pad;
+    const cT = ccy - cr * 0.8 + pad, cB = ccy + cr * 0.8 - pad;
+    const sc = Math.min((cR - cL) / patW, (cB - cT) / patH);
+    const ox = ccx - patCx * sc, oy = ccy - patCy * sc;
+
+    const path = [];
+    for (let i = 0; i < orderedPoints.length; i += sp) {
+      const p = orderedPoints[i];
+      path.push({ x: p.x * sc + ox, y: p.y * sc + oy, color: `rgb(${p.r},${p.g},${p.b})` });
+    }
+    embroidery.guidedPath = path;
+    console.log('✅ 纹样引导路径: ' + path.length + ' 点');
+  } else {
+    // ── 降级方案：阿基米德螺旋路径（从内向外） ──
+    const path = [];
+    const cx = ccx, cy = ccy;
+    const maxR = cr * 0.75;
+    const imgAspect = clothImage.naturalWidth / clothImage.naturalHeight;
+    // 缩放图片到适应绣布
+    const clothAspect = (cr*2) / (cr*1.6);
+    let imgDrawW, imgDrawH;
+    if (imgAspect > clothAspect) { imgDrawW = cr*2; imgDrawH = cr*2/imgAspect; }
+    else { imgDrawH = cr*1.6; imgDrawW = cr*1.6*imgAspect; }
+
+    // 用图片在中部采样颜色
+    const sampleCanvas = document.createElement('canvas');
+    sampleCanvas.width = Math.round(imgDrawW * 0.7);
+    sampleCanvas.height = Math.round(imgDrawH * 0.7);
+    const sctx = sampleCanvas.getContext('2d');
+    sctx.drawImage(clothImage, 0, 0, sampleCanvas.width, sampleCanvas.height);
+    let colorData = null;
+    try { colorData = sctx.getImageData(0, 0, sampleCanvas.width, sampleCanvas.height); }
+    catch(e) { console.warn('降级方案像素采样也失败'); }
+
+    const turns = 8;
+    const totalPts = targetCount;
+    for (let i = 0; i < totalPts; i++) {
+      const t = i / totalPts;
+      const r = maxR * t;
+      const angle = t * turns * Math.PI * 2;
+      const px = cx + r * Math.cos(angle);
+      const py = cy + r * Math.sin(angle) * 0.8;
+      // 尝试从图片取色
+      let color = 'rgb(201,169,110)'; // 默认金色
+      if (colorData) {
+        const sx = Math.round(t * sampleCanvas.width);
+        const sy = Math.round(0.5 * sampleCanvas.height);
+        const ci = (Math.min(sy, sampleCanvas.height-1) * sampleCanvas.width + Math.min(sx, sampleCanvas.width-1)) * 4;
+        const rr = colorData.data[ci], gg = colorData.data[ci+1], bb = colorData.data[ci+2];
+        if (rr !== undefined) color = `rgb(${rr},${gg},${bb})`;
+      }
+      path.push({ x: px, y: py, color: color });
+    }
+    embroidery.guidedPath = path;
+    console.log('✅ 降级螺旋路径: ' + path.length + ' 点（从中心向外展开）');
   }
-
-  embroidery.guidedPath = path;
   embroidery.guidedIndex = 0;
-  console.log('✅ 引导路径就绪: ' + path.length + ' 点, 缩放' + sc.toFixed(2) + 'x, 螺旋走线');
 }
 
 const stitchNames = { running:'平针绣', back:'回针绣', chain:'锁链针', cross:'十字针' };
@@ -488,22 +528,22 @@ function deepenColor(cssRgb) {
   const isBlue = (hueDeg >= 200 && hueDeg < 260);    // 蓝
   const isPurple = (hueDeg >= 260 && hueDeg < 330);  // 紫
 
-  // 增强饱和度（不同色系保持不同饱和度）
-  if (isRed || isOrange) s = Math.max(s, 0.75);       // 红/橙更饱和
-  else if (isYellow) s = Math.max(s, 0.65);           // 黄稍微降饱和避免刺眼
-  else if (isGreen || isCyan) s = Math.max(s, 0.70);  // 绿/青适中
-  else s = Math.max(s, 0.68);                         // 蓝/紫等
+  // 增强饱和度 — 适度提升，不破坏原色
+  if (isRed || isOrange) s = Math.min(1, s * 1.3);          // 红/橙稍提
+  else if (isYellow) s = Math.min(1, s * 1.2);              // 黄微提
+  else if (isGreen || isCyan) s = Math.min(1, s * 1.25);    // 绿/青稍提
+  else s = Math.min(1, s * 1.2);                            // 蓝/紫等
 
-  // 亮度处理：根据原亮度按比例压暗，保留相对明暗层次
-  // 原亮度 < 0.5 的压到 35-45%，原亮度 > 0.5 的压到 45-55%
-  if (l < 0.5) {
-    // 深色区域：35%~45%
-    l = 0.35 + l * 0.2;
+  // 亮度处理：接近原图，只微压 15~25%
+  // 原亮度 < 0.4 的几乎不变，> 0.4 的微压
+  if (l < 0.4) {
+    l = l * 0.92;           // 深色区域几乎不变
+  } else if (l < 0.6) {
+    l = 0.4 + (l - 0.4) * 0.6;  // 中亮区域压 10%左右
   } else {
-    // 浅色区域：45%~55%（不要太暗，否则蓝色变紫色、米色变土黄）
-    l = 0.45 + (l - 0.5) * 0.2;
+    l = 0.52 + (l - 0.6) * 0.28; // 浅色区域压 20%左右
   }
-  l = Math.max(0.30, Math.min(l, 0.55)); // 安全范围
+  l = Math.max(0.28, Math.min(l, 0.65)); // 安全范围
 
   // hsl → rgb
   const q = l < 0.5 ? l*(1+s) : l+s-l*s;
@@ -543,9 +583,9 @@ function addStitch(x, y) {
 
   // 计算本针长度（有长有短，基于索引确定性伪随机，刷新后不变）
   const baseLen = { running: 14, back: 18, chain: 11, cross: 12 }[embroidery.currentStitch] || 14;
-  const vary = 0.45; // ±45% 变化幅度
+  const vary = 0.65; // ±65% 变化幅度，让长短差异明显
   const seed = Math.abs(Math.sin((embroidery.stitches.length + 1) * 7.13)) * 2 - 1; // -1~1 确定性伪随机
-  const stitchLen = Math.max(baseLen * 0.45, Math.min(baseLen * 1.55, baseLen * (1 + seed * vary)));
+  const stitchLen = Math.max(baseLen * 0.30, Math.min(baseLen * 1.80, baseLen * (1 + seed * vary)));
 
   embroidery.needle.x = x;
   embroidery.needle.y = y;
@@ -1028,43 +1068,7 @@ function draw() {
       ctx.restore();
     }
 
-    // 引导路径幽灵预览：用图片原色微弱显示，展示整体纹样轮廓
-    const path = embroidery.guidedPath;
-    if (path.length > 0 && embroidery.guidedIndex < path.length) {
-      for (let i = embroidery.guidedIndex; i < path.length; i++) {
-        if ((i - embroidery.guidedIndex) % 2 === 0) {
-          const pt = path[i];
-          // 用图片原色，透明度 0.22，让纹样轮廓以真实色调显示
-          const c = pt.color || 'rgb(201,169,110)';
-          ctx.fillStyle = c.replace('rgb(', 'rgba(').replace(')', ',0.22)');
-          ctx.beginPath();
-          ctx.arc(pt.x, pt.y, 1.5, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-    }
-
-    // 引导路径：下一针闪烁指示
-    if (path.length > 0 && embroidery.guidedIndex < path.length) {
-      const nextPt = path[embroidery.guidedIndex];
-      const pulse = 0.4 + 0.6 * Math.abs(Math.sin(animTime * 4));
-      ctx.strokeStyle = `rgba(201,169,110,${pulse})`;
-      ctx.lineWidth = 2;
-      ctx.setLineDash([3, 3]);
-      ctx.beginPath(); ctx.arc(nextPt.x, nextPt.y, 10 + pulse * 4, 0, Math.PI * 2); ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.fillStyle = `rgba(201,169,110,${pulse})`;
-      ctx.beginPath(); ctx.arc(nextPt.x, nextPt.y, 4, 0, Math.PI * 2); ctx.fill();
-      // 从上一针到下一针的虚线引导
-      if (embroidery.stitches.length > 0) {
-        const prev = embroidery.stitches[embroidery.stitches.length - 1];
-        ctx.strokeStyle = `rgba(201,169,110,0.3)`;
-        ctx.setLineDash([2, 6]);
-        ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(prev.x, prev.y); ctx.lineTo(nextPt.x, nextPt.y); ctx.stroke();
-        ctx.setLineDash([]);
-      }
-    }
+    // 引导路径幽灵预览已移除
 
     // 绣针动画
     const nd = embroidery.needle;
@@ -1088,7 +1092,7 @@ function draw() {
     const pathPct = embroidery.guidedPath.length > 0
       ? Math.round(embroidery.guidedIndex / embroidery.guidedPath.length * 100) + '%'
       : '—';
-    ctx.fillText(`🌸 ${currentPattern.name}纹样 · 完成 ${pathPct}  |  按E绣下一针  |  点击绣布跟随路径`, cx, h*0.945);
+    ctx.fillText(`🌸 ${currentPattern.name}纹样 · 完成 ${pathPct}  |  按E绣下一针  |  点击绣布落针`, cx, h*0.945);
   } catch(e) {
     console.warn('渲染出错但继续:', e);
   }

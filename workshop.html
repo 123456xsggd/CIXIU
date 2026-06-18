@@ -164,7 +164,7 @@ body{
     <div class="gesture-card" id="gc-thread">
       <div class="icon">🤏</div>
       <div class="name"><span class="status-dot" id="dot-thread"></span>手指捏合</div>
-      <div class="desc">拇指与食指捏合<br>→ 沿莲花纹样绣一针<br>金色光点 = 下一针位置</div>
+      <div class="desc">拇指与食指捏合<br>→ 沿纹样绣一针<br>金色光点 = 下一针位置</div>
     </div>
     <div class="gesture-card" id="gc-pinchmove">
       <div class="icon">🪡</div>
@@ -223,6 +223,26 @@ body{
 // 刺绣手势交互工坊 — 核心渲染（不依赖 MediaPipe）
 // ============================================================
 
+// ── 纹样配置 ──
+const PATTERN_CONFIG = {
+  lotus:    { name:'莲花', image:'lotus-finish.jpg',       label:'清雅高洁',  poem:'出淤泥而不染' },
+  plum:     { name:'梅花', image:'pattern-plum.png',        label:'傲雪凌霜',  poem:'凌寒独自开' },
+  peony:    { name:'牡丹', image:'pattern-peony.png',       label:'国色天香',  poem:'花开富贵' },
+  butterfly:{ name:'蝴蝶', image:'pattern-butterfly.png',   label:'翩跹灵动',  poem:'栩栩如生' }
+};
+
+// 读取 URL 参数
+const urlParams = new URLSearchParams(window.location.search);
+const patternKey = urlParams.get('pattern') || 'lotus';
+const currentPattern = PATTERN_CONFIG[patternKey] || PATTERN_CONFIG['lotus'];
+
+console.log('🖼️ 当前纹样:', currentPattern.name, '→', currentPattern.image);
+
+// 更新页面标题和标签
+document.title = `刺绣工坊 · ${currentPattern.name}`;
+document.querySelector('.stage-label').textContent = `${currentPattern.name} 刺 绣`;
+document.querySelector('.header .logo').innerHTML = `民间<span>工艺</span> · ${currentPattern.name}`;
+
 // --- Canvas roundRect polyfill ---
 if (!CanvasRenderingContext2D.prototype.roundRect) {
   CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
@@ -271,13 +291,13 @@ window.addEventListener('resize', resize);
 // 预加载莲花刺绣成品图（resize 后加载，确保 canvas 尺寸已就绪）
 const clothImage = new Image();
 clothImage.onload = () => {
-  console.log('📷 莲花底图加载成功, canvas=', canvas.width, 'x', canvas.height);
+  console.log('📷 ' + currentPattern.name + '底图加载成功, canvas=', canvas.width, 'x', canvas.height);
   generateGuidedPath();
 };
 clothImage.onerror = () => {
-  console.error('❌ 莲花底图加载失败！');
+  console.error('❌ ' + currentPattern.name + '底图加载失败！');
 };
-clothImage.src = 'lotus-finish.jpg?v=20260618a';  // 版本号绕过缓存
+clothImage.src = currentPattern.image + '?v=20260618a';  // 版本号绕过缓存
 
 // 从图片提取纹样轮廓 → 生成刺绣引导路径
 function generateGuidedPath() {
@@ -285,7 +305,7 @@ function generateGuidedPath() {
     console.warn('⚠️ 图片尚未加载完毕，跳过引导路径生成');
     return;
   }
-  console.log('🧵 开始提取莲花纹样轮廓…');
+  console.log('🧵 开始提取' + currentPattern.name + '纹样轮廓…');
 
   const sampleW = 360;
   const sampleH = Math.round(sampleW * clothImage.naturalHeight / clothImage.naturalWidth);
@@ -539,11 +559,11 @@ function addStitch(x, y) {
     embroidery.clothReveal = Math.min(1, (total - 3) / 3);
     if (!embroidery.completionShown) {
       embroidery.completionShown = true;
-      showToast('🌸 莲花纹样初现！');
+      showToast('🌸 ' + currentPattern.name + '纹样初现！');
     }
   }
   if (total >= 6 && embroidery.clothReveal >= 0.99) {
-    showToast('🎉 莲花绽放！图片已清晰');
+    showToast('🎉 ' + currentPattern.name + '绽放！图片已清晰');
   }
 
   // 颜色已在引导路径取色时更新，无需随机换色
@@ -1068,7 +1088,7 @@ function draw() {
     const pathPct = embroidery.guidedPath.length > 0
       ? Math.round(embroidery.guidedIndex / embroidery.guidedPath.length * 100) + '%'
       : '—';
-    ctx.fillText(`🌸 莲花纹样 · 完成 ${pathPct}  |  按E绣下一针  |  点击绣布跟随路径`, cx, h*0.945);
+    ctx.fillText(`🌸 ${currentPattern.name}纹样 · 完成 ${pathPct}  |  按E绣下一针  |  点击绣布跟随路径`, cx, h*0.945);
   } catch(e) {
     console.warn('渲染出错但继续:', e);
   }
@@ -1078,8 +1098,8 @@ function draw() {
 // --- 启动 ---
 updateStitchIndicator();
 draw();
-console.log('🧵 刺绣手势交互工坊已就绪');
-console.log('  莲花纹样引导缝制：每次点击/按键自动跟随图片花纹走线');
+console.log('🧵 刺绣手势交互工坊已就绪 — 当前纹样：' + currentPattern.name);
+console.log('  纹样引导缝制：每次点击/按键自动跟随图片花纹走线');
 console.log('  手势：捏合→绣针 | 张开→清空 | 键盘：E绣针 1-4针法 R清空 | 点击绣布落针');
 console.log('  空格键开启/关闭摄像头实时手势识别');
 </script>

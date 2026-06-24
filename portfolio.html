@@ -349,6 +349,42 @@ nav {
 }
 .mc-list li span{color:var(--gold-light);}
 
+/* ─── 二维码 ─── */
+.qr-section {
+  padding:80px 40px;text-align:center;
+  max-width:1100px;margin:0 auto;
+}
+.qr-grid {
+  display:flex;gap:32px;justify-content:center;flex-wrap:wrap;
+  margin-top:48px;
+}
+.qr-card {
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:var(--radius);padding:32px 28px;
+  text-align:center;transition:all 0.3s;position:relative;
+  min-width:220px;
+}
+.qr-card:hover{border-color:var(--gold-dim);transform:translateY(-4px);box-shadow:0 12px 40px rgba(201,169,110,0.08);}
+.qr-card .qr-tag {
+  display:inline-block;font-size:11px;color:var(--gold);
+  border:1px solid var(--border-light);border-radius:20px;
+  padding:4px 16px;margin-bottom:18px;letter-spacing:3px;
+  font-family:var(--font-cn);
+}
+.qr-card .qr-title {
+  font-family:var(--font-cn);font-size:15px;color:var(--gold-light);
+  margin-bottom:18px;letter-spacing:2px;
+}
+.qr-card img {
+  width:180px;height:180px;border-radius:8px;
+  border:1px solid var(--border);transition:transform 0.3s;
+}
+.qr-card:hover img{transform:scale(1.03);}
+.qr-card .qr-url {
+  font-size:10px;color:var(--ink-dim);word-break:break-all;
+  margin-top:14px;font-family:'Courier New',monospace;line-height:1.5;
+}
+
 /* ─── CTA 底部 ─── */
 .cta-section {
   padding:80px 40px;text-align:center;
@@ -738,6 +774,34 @@ footer {
         <li><span>成品渐显：</span>3 针初现 · 6 针清晰</li>
         <li><span>键盘控制：</span>E / R / 1-4 / 空格</li>
       </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 二维码 -->
+<section class="qr-section">
+  <p class="section-label reveal">SCAN TO VISIT</p>
+  <h2 class="section-title reveal delay-1">扫码访问</h2>
+  <p class="section-desc reveal delay-2">手机扫码即可体验，随时随地进入刺绣工坊</p>
+
+  <div class="qr-grid reveal delay-2">
+    <div class="qr-card">
+      <span class="qr-tag">首页</span>
+      <div class="qr-title">项目入口</div>
+      <img src="qr-index.png" alt="首页二维码">
+      <div class="qr-url">123456xsggd.github.io/CIXIU/</div>
+    </div>
+    <div class="qr-card">
+      <span class="qr-tag">工坊</span>
+      <div class="qr-title">手势绣花</div>
+      <img src="qr-workshop.png" alt="工坊二维码">
+      <div class="qr-url">123456xsggd.github.io/CIXIU/workshop.html</div>
+    </div>
+    <div class="qr-card">
+      <span class="qr-tag">作品集</span>
+      <div class="qr-title">项目展示</div>
+      <img src="qr-portfolio.png" alt="作品集二维码">
+      <div class="qr-url">123456xsggd.github.io/CIXIU/portfolio.html</div>
     </div>
   </div>
 </section>

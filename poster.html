@@ -18,6 +18,7 @@
     --red-light: #e74c3c;
     --ink: #f0e6d3;
     --ink-dim: #8a7e6b;
+    --ink-mute: #4a4035;
     --border: rgba(201,169,110,0.15);
     --font-cn: 'Songti SC','STSong','SimSun','Noto Serif CJK SC','FangSong',serif;
   }
@@ -36,199 +37,218 @@
 
   /* ─── 背景纹理 ─── */
   .poster-bg {
-    position: absolute; inset: 0; pointer-events:none;
+    position: absolute; inset: 0; pointer-events: none;
     z-index: 0;
   }
   .poster-bg::before {
-    content:''; position:absolute; inset:0;
+    content: ''; position: absolute; inset: 0;
     background:
-      radial-gradient(ellipse at 50% 8%, rgba(201,169,110,0.07) 0%, transparent 55%),
-      radial-gradient(ellipse at 20% 80%, rgba(192,57,43,0.04) 0%, transparent 45%),
-      radial-gradient(ellipse at 85% 70%, rgba(201,169,110,0.03) 0%, transparent 40%);
+      radial-gradient(ellipse at 50% 5%, rgba(201,169,110,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 30% 85%, rgba(192,57,43,0.04) 0%, transparent 40%),
+      radial-gradient(ellipse at 75% 60%, rgba(201,169,110,0.03) 0%, transparent 35%);
   }
   .poster-bg::after {
-    content:''; position:absolute; inset:0;
-    opacity: 0.04;
-    background-image: repeating-linear-gradient(
-      0deg,
-      transparent, transparent 14px,
-      rgba(201,169,110,0.15) 14px, rgba(201,169,110,0.15) 14.5px
-    ),
-    repeating-linear-gradient(
-      90deg,
-      transparent, transparent 14px,
-      rgba(201,169,110,0.1) 14px, rgba(201,169,110,0.1) 14.5px
-    );
+    content: ''; position: absolute; inset: 0;
+    opacity: 0.035;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 14px,
+        rgba(201,169,110,0.15) 14px, rgba(201,169,110,0.15) 14.5px),
+      repeating-linear-gradient(90deg, transparent, transparent 14px,
+        rgba(201,169,110,0.1) 14px, rgba(201,169,110,0.1) 14.5px);
   }
 
   /* ─── 绣框边框 ─── */
   .embroidery-frame {
-    position: absolute; inset: 16mm;
+    position: absolute; inset: 14mm;
     border: 1px solid var(--border);
-    border-radius: 4mm;
+    border-radius: 3mm;
     pointer-events: none; z-index: 10;
   }
   .embroidery-frame::before {
-    content:''; position:absolute; inset:-1mm;
-    border: 0.5px solid rgba(201,169,110,0.08); border-radius:5mm;
+    content: ''; position: absolute; inset: -1mm;
+    border: 0.5px solid rgba(201,169,110,0.06);
+    border-radius: 4mm;
   }
+
   /* 四角装饰 */
   .corner-deco {
-    position: absolute; width: 18mm; height: 18mm; z-index:11;
+    position: absolute; width: 16mm; height: 16mm; z-index: 11;
   }
-  .corner-deco svg { width:100%; height:100%; }
-  .corner-tl { top:12mm; left:12mm; transform: rotate(0deg); }
-  .corner-tr { top:12mm; right:12mm; transform: rotate(90deg); }
-  .corner-bl { bottom:12mm; left:12mm; transform: rotate(-90deg); }
-  .corner-br { bottom:12mm; right:12mm; transform: rotate(180deg); }
+  .corner-deco svg { width: 100%; height: 100%; }
+  .corner-tl { top: 10mm; left: 10mm; }
+  .corner-tr { top: 10mm; right: 10mm; transform: scaleX(-1); }
+  .corner-bl { bottom: 10mm; left: 10mm; transform: scaleY(-1); }
+  .corner-br { bottom: 10mm; right: 10mm; transform: scale(-1,-1); }
 
-  /* ─── 右上角二维码区 ─── */
+  /* ─── 右上角二维码 ─── */
   .qr-corner {
-    position: absolute; top:22mm; right:24mm; z-index: 30;
-    display: flex; flex-direction: column; align-items: flex-end; gap: 6mm;
+    position: absolute; top: 24mm; right: 26mm; z-index: 30;
+    display: flex; flex-direction: column; gap: 5mm;
   }
   .qr-item {
-    display:flex; align-items:center; gap:6mm;
-    background:rgba(26,20,16,0.85);
-    backdrop-filter:blur(8px);
-    border:1px solid var(--border); border-radius:3mm;
-    padding:4mm 6mm;
+    display: flex; align-items: center; gap: 5mm;
+    background: rgba(26,20,16,0.88);
+    border: 1px solid var(--border);
+    border-radius: 2.5mm;
+    padding: 3.5mm 5mm;
   }
   .qr-item img {
-    width:28mm; height:28mm; border-radius:1.5mm;
-    border:0.5px solid var(--border);
+    width: 26mm; height: 26mm;
+    border-radius: 1mm;
+    border: 0.5px solid var(--border);
   }
   .qr-label {
-    font-size:7pt; color:var(--gold-dim); letter-spacing:2pt;
-    text-align:right; line-height:1.6;
+    font-size: 7pt; color: var(--gold-dim);
+    letter-spacing: 2pt; text-align: right; line-height: 1.5;
   }
-  .qr-label b { display:block; font-size:9pt; color:var(--gold-bright); letter-spacing:1pt; }
+  .qr-label b {
+    display: block; font-size: 9pt;
+    color: var(--gold-bright); letter-spacing: 1pt;
+    margin-bottom: 1mm;
+  }
 
-  /* ─── 主内容区 ─── */
+  /* ─── 装饰绣线 ─── */
+  .deco-lines {
+    position: absolute; top: 100mm; left: 50%;
+    transform: translateX(-50%);
+    width: 320mm; height: 80mm;
+    opacity: 0.05; pointer-events: none; z-index: 5;
+  }
+
+  /* ─── 主内容 ─── */
   .content {
-    position:relative; z-index:20;
-    width:100%; height:100%;
-    padding:36mm 40mm 32mm 34mm;
-    display:flex; flex-direction:column;
+    position: relative; z-index: 20;
+    width: 100%; height: 100%;
+    padding: 34mm 50mm 28mm 50mm;
+    display: flex; flex-direction: column;
+    align-items: center;
   }
 
-  /* ─── 头部 ─── */
-  .header-row {
-    display:flex; justify-content:space-between; align-items:flex-start;
-    margin-bottom: 8mm;
-  }
-  .header-left { max-width:260mm; }
+  /* ─── 标题区（居中）─── */
+  .header { text-align: center; margin-bottom: 10mm; }
   .tag-line {
-    font-size:8pt; color:var(--red-light); letter-spacing:5pt;
-    text-transform:uppercase; margin-bottom:6mm;
-    display:inline-block;
-    border-bottom:1px solid rgba(231,76,60,0.25); padding-bottom:2mm;
+    font-size: 8pt; color: var(--red-light);
+    letter-spacing: 6pt; margin-bottom: 8mm;
+    display: inline-block;
+    border-bottom: 1px solid rgba(231,76,60,0.2);
+    padding-bottom: 2mm;
   }
   .main-title {
-    font-size:52pt; color:var(--gold); letter-spacing:18pt;
-    line-height:1.15; margin-bottom:5mm;
-    text-shadow:0 2px 30px rgba(201,169,110,0.2);
+    font-size: 64pt; color: var(--gold);
+    letter-spacing: 24pt; line-height: 1.1;
+    margin-bottom: 4mm; padding-left: 24pt;
+    text-shadow: 0 2px 40px rgba(201,169,110,0.2);
   }
-  .main-title span { color:var(--red-light); }
+  .main-title span { color: var(--red-light); }
   .sub-title {
-    font-size:13pt; color:var(--ink-dim); letter-spacing:8pt;
-    margin-bottom:8mm;
+    font-size: 14pt; color: var(--ink-dim);
+    letter-spacing: 10pt; margin-bottom: 8mm;
+    padding-left: 10pt;
   }
   .desc-text {
-    font-size:10.5pt; color:var(--ink-dim); line-height:2;
-    max-width:240mm; letter-spacing:1pt;
+    font-size: 10pt; color: var(--ink-dim);
+    line-height: 2.1; max-width: 250mm;
+    letter-spacing: 1pt; margin: 0 auto;
   }
 
-  /* ─── 数据徽章行 ─── */
+  /* ─── 数据栏 ─── */
   .stats-bar {
-    display:flex; gap:20mm; margin-bottom:10mm;
-    padding:6mm 0; border-top:1px solid var(--border); border-bottom:1px solid var(--border);
+    display: flex; gap: 18mm;
+    margin-bottom: 12mm; margin-top: 4mm;
+    padding: 6mm 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    justify-content: center;
   }
-  .stat-item { text-align:center; }
+  .stat-item { text-align: center; }
   .stat-num {
-    font-size:24pt; color:var(--gold); letter-spacing:2pt;
-    display:block; line-height:1;
+    font-size: 26pt; color: var(--gold);
+    letter-spacing: 2pt; display: block; line-height: 1;
   }
-  .stat-lbl { font-size:7.5pt; color:var(--ink-dim); letter-spacing:2pt; margin-top:2mm; }
+  .stat-lbl {
+    font-size: 7.5pt; color: var(--ink-dim);
+    letter-spacing: 2pt; margin-top: 2mm;
+  }
 
-  /* ─── 中部亮点网格 ─── */
-  .highlights-area { flex:1; display:flex; gap:8mm; }
-  
-  .hl-col { flex:1; display:flex; flex-direction:column; gap:6mm; }
-  
+  /* ─── 亮点列表（单列纵排）─── */
+  .highlights {
+    flex: 1; width: 280mm;
+    display: flex; flex-direction: column;
+    gap: 4mm;
+  }
   .hl-card {
-    flex:1; background:rgba(26,20,16,0.75);
-    border:1px solid var(--border); border-radius:3mm;
-    padding:7mm; transition:border-color 0.3s; position:relative;
-    display:flex; flex-direction:column;
+    background: rgba(26,20,16,0.7);
+    border: 1px solid var(--border);
+    border-radius: 2.5mm;
+    padding: 6mm 8mm;
+    display: flex; align-items: center; gap: 8mm;
+    position: relative; overflow: hidden;
+    transition: border-color 0.3s;
   }
-  .hl-card:hover { border-color:var(--gold-dim); }
+  .hl-card:hover { border-color: var(--gold-dim); }
   .hl-card::before {
-    content:''; position:absolute; top:0; left:7mm; right:7mm; height:0.8mm;
-    background:linear-gradient(90deg,transparent,var(--gold),transparent); opacity:0;
-    transition:opacity 0.3s;
+    content: ''; position: absolute;
+    left: 0; top: 0; bottom: 0; width: 1.5mm;
+    background: linear-gradient(180deg, transparent, var(--gold-dim), transparent);
+    opacity: 0.4;
   }
-  .hl-card:hover::before{opacity:1;}
 
   .hl-num {
-    font-size:7pt; color:var(--gold-dim); letter-spacing:3pt;
-    margin-bottom:3mm;
+    font-size: 18pt; color: var(--gold-dim);
+    letter-spacing: 2pt; flex-shrink: 0;
+    width: 14mm; text-align: center;
+    font-family: var(--font-cn);
   }
-  .hl-icon { font-size:22pt; margin-bottom:3mm; }
+  .hl-icon {
+    font-size: 20pt; flex-shrink: 0;
+    width: 14mm; text-align: center;
+  }
+  .hl-body { flex: 1; }
   .hl-title {
-    font-size:12pt; color:var(--gold-bright); letter-spacing:2pt;
-    margin-bottom:3mm;
+    font-size: 12pt; color: var(--gold-bright);
+    letter-spacing: 2pt; margin-bottom: 1.5mm;
   }
   .hl-desc {
-    font-size:8pt; color:var(--ink-dim); line-height:1.85; letter-spacing:0.5pt;
-    flex:1;
+    font-size: 8.5pt; color: var(--ink-dim);
+    line-height: 1.8; letter-spacing: 0.5pt;
   }
 
-  /* ─── 底部信息 ─── */
-  .footer-area {
-    display:flex; justify-content:space-between; align-items:flex-end;
-    margin-top:8mm; padding-top:6mm;
-    border-top:1px solid var(--border);
+  /* ─── 页脚 ─── */
+  .footer {
+    width: 100%; margin-top: 8mm;
+    padding-top: 6mm;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between;
+    align-items: flex-end;
   }
-  .footer-left {}
   .footer-brand {
-    font-size:14pt; color:var(--gold); letter-spacing:6pt;
-    margin-bottom:2mm;
+    font-size: 14pt; color: var(--gold);
+    letter-spacing: 6pt; margin-bottom: 2mm;
   }
-  .footer-brand span { color:var(--red-light); }
+  .footer-brand span { color: var(--red-light); }
   .footer-sub {
-    font-size:7.5pt; color:var(--ink-mute); letter-spacing:3pt;
+    font-size: 7.5pt; color: var(--ink-mute);
+    letter-spacing: 3pt;
   }
-  .footer-right { text-align:right; }
+  .footer-right { text-align: right; }
   .tech-tags {
-    display:flex; flex-wrap:wrap; gap:4mm; justify-content:flex-end;
-    margin-bottom:3mm;
+    display: flex; flex-wrap: wrap; gap: 3mm;
+    justify-content: flex-end; margin-bottom: 3mm;
   }
   .tech-tag {
-    font-size:7pt; color:var(--gold-dim); letter-spacing:1pt;
-    border:0.6px solid var(--border); border-radius:2mm;
-    padding:1.5mm 4.5mm; background:rgba(26,20,16,0.6);
+    font-size: 7pt; color: var(--gold-dim);
+    letter-spacing: 1pt;
+    border: 0.6px solid var(--border);
+    border-radius: 2mm;
+    padding: 1.5mm 4mm;
+    background: rgba(26,20,16,0.6);
   }
   .deploy-info {
-    font-size:7pt; color:var(--ink-dim); letter-spacing:1pt;
-    font-family:'Courier New',monospace;
+    font-size: 7pt; color: var(--ink-dim);
+    letter-spacing: 1pt;
+    font-family: 'Courier New', monospace;
   }
 
-  /* ─── 装饰绣线 SVG ─── */
-  .deco-lines {
-    position:absolute; top:120mm; left:34mm;
-    width:200mm; height:auto; opacity:0.06; pointer-events:none; z-index:5;
-  }
-
-  /* ─── 纹样装饰图（底部角落）┐── */
-  .pattern-deco {
-    position:absolute; bottom:60mm; right:55mm;
-    width:80mm; height:80mm; opacity:0.06; z-index:3;
-    pointer-events:none;
-  }
-  .pattern-deco img { width:100%; height:100%; object-fit:contain; filter:sepia(1) brightness(1.2); }
-
-  /* ─── 打印样式 ─── */
   @media print {
     body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   }
@@ -244,38 +264,38 @@
 
 <!-- 四角装饰 -->
 <div class="corner-deco corner-tl">
-  <svg viewBox="0 0 100 100" fill="none" stroke="#c9a96e" stroke-width="0.6" opacity="0.35">
-    <path d="M0,40 Q0,0 40,0" />
-    <path d="M0,55 Q0,0 55,0" stroke-opacity="0.2"/>
-    <circle cx="8" cy="8" r="2" fill="#c9a96e"/>
+  <svg viewBox="0 0 100 100" fill="none" stroke="#c9a96e" stroke-width="0.6" opacity="0.3">
+    <path d="M0,35 Q0,0 35,0"/>
+    <path d="M0,50 Q0,0 50,0" stroke-opacity="0.15"/>
+    <circle cx="7" cy="7" r="1.8" fill="#c9a96e"/>
   </svg>
 </div>
 <div class="corner-deco corner-tr">
-  <svg viewBox="0 0 100 100" fill="none" stroke="#c9a96e" stroke-width="0.6" opacity="0.35">
-    <path d="M0,40 Q0,0 40,0" />
-    <path d="M0,55 Q0,0 55,0" stroke-opacity="0.2"/>
-    <circle cx="8" cy="8" r="2" fill="#c9a96e"/>
+  <svg viewBox="0 0 100 100" fill="none" stroke="#c9a96e" stroke-width="0.6" opacity="0.3">
+    <path d="M0,35 Q0,0 35,0"/>
+    <path d="M0,50 Q0,0 50,0" stroke-opacity="0.15"/>
+    <circle cx="7" cy="7" r="1.8" fill="#c9a96e"/>
   </svg>
 </div>
 <div class="corner-deco corner-bl">
-  <svg viewBox="0 0 100 100" fill="none" stroke="#c9a96e" stroke-width="0.6" opacity="0.35">
-    <path d="M0,40 Q0,0 40,0" />
-    <path d="M0,55 Q0,0 55,0" stroke-opacity="0.2"/>
-    <circle cx="8" cy="8" r="2" fill="#c9a96e"/>
+  <svg viewBox="0 0 100 100" fill="none" stroke="#c9a96e" stroke-width="0.6" opacity="0.3">
+    <path d="M0,35 Q0,0 35,0"/>
+    <path d="M0,50 Q0,0 50,0" stroke-opacity="0.15"/>
+    <circle cx="7" cy="7" r="1.8" fill="#c9a96e"/>
   </svg>
 </div>
 <div class="corner-deco corner-br">
-  <svg viewBox="0 0 100 100" fill="none" stroke="#c9a96e" stroke-width="0.6" opacity="0.35">
-    <path d="M0,40 Q0,0 40,0" />
-    <path d="M0,55 Q0,0 55,0" stroke-opacity="0.2"/>
-    <circle cx="8" cy="8" r="2" fill="#c9a96e"/>
+  <svg viewBox="0 0 100 100" fill="none" stroke="#c9a96e" stroke-width="0.6" opacity="0.3">
+    <path d="M0,35 Q0,0 35,0"/>
+    <path d="M0,50 Q0,0 50,0" stroke-opacity="0.15"/>
+    <circle cx="7" cy="7" r="1.8" fill="#c9a96e"/>
   </svg>
 </div>
 
 <!-- 装饰绣线 -->
-<svg class="deco-lines" viewBox="0 0 800 300">
-  <path d="M0,150 C150,50 350,250 600,100 S800,180 800,180" fill="none" stroke="#c9a96e" stroke-width="0.8" stroke-dasharray="8,12"/>
-  <path d="M0,220 C200,120 400,280 650,160 S800,230 800,230" fill="none" stroke="#c0392b" stroke-width="0.5" stroke-dasharray="4,16"/>
+<svg class="deco-lines" viewBox="0 0 800 80">
+  <path d="M0,40 C150,10 350,70 600,20 S800,50 800,50" fill="none" stroke="#c9a96e" stroke-width="0.8" stroke-dasharray="8,12"/>
+  <path d="M0,55 C200,25 400,75 650,35 S800,60 800,60" fill="none" stroke="#c0392b" stroke-width="0.5" stroke-dasharray="4,16"/>
 </svg>
 
 <!-- 右上角二维码 -->
@@ -293,18 +313,15 @@
 <!-- 主内容 -->
 <div class="content">
 
-  <!-- 标题区 -->
-  <div class="header-row">
-    <div class="header-left">
-      <div class="tag-line">交互设计 &nbsp;·&nbsp; 中国传统工艺 &nbsp;·&nbsp; 计算机视觉</div>
-      <h1 class="main-title">刺<span>绣</span></h1>
-      <div class="sub-title">CIXIU · 手势交互工坊</div>
-      <p class="desc-text">
-        将中国千年刺绣工艺与现代计算机视觉融合，用双手在虚拟绣布上缝制东方花纹。
-        基于 MediaPipe 实时手势识别，AI 提取纹样路径，四大传统针法渲染，
-        成品图随针数渐显——在像素世界中重现针线之美。
-      </p>
-    </div>
+  <!-- 标题 -->
+  <div class="header">
+    <div class="tag-line">交互设计 · 中国传统工艺 · 计算机视觉</div>
+    <h1 class="main-title">刺<span>绣</span></h1>
+    <div class="sub-title">CIXIU · 手势交互工坊</div>
+    <p class="desc-text">
+      将中国千年刺绣工艺与现代计算机视觉融合，用双手在虚拟绣布上缝制东方花纹。<br>
+      基于 MediaPipe 实时手势识别，AI 提取纹样路径，四大传统针法渲染，成品图随针数渐显——在像素世界中重现针线之美。
+    </p>
   </div>
 
   <!-- 数据栏 -->
@@ -316,52 +333,60 @@
     <div class="stat-item"><span class="stat-num">60fps</span><span class="stat-lbl">实时渲染</span></div>
   </div>
 
-  <!-- 六大亮点 -->
-  <div class="highlights-area">
-    <div class="hl-col">
-      <div class="hl-card">
-        <div class="hl-num">01</div>
-        <div class="hl-icon">&#x1F916;</div>
+  <!-- 六大亮点（单列纵排）-->
+  <div class="highlights">
+    <div class="hl-card">
+      <div class="hl-num">01</div>
+      <div class="hl-icon">&#x1F916;</div>
+      <div class="hl-body">
         <div class="hl-title">AI 手势识别</div>
         <div class="hl-desc">基于 MediaPipe HandLandmarker，实时追踪 21 个手部关键点。捏合落针、张开清空，延迟极低。</div>
       </div>
-      <div class="hl-card">
-        <div class="hl-num">02</div>
-        <div class="hl-icon">&#x1F3A8;</div>
+    </div>
+    <div class="hl-card">
+      <div class="hl-num">02</div>
+      <div class="hl-icon">&#x1F3A8;</div>
+      <div class="hl-body">
         <div class="hl-title">纹样路径提取</div>
-        <div class="hl-desc">从刺绣图片像素中自动提取纹样轮廓，蛇形扫描生成缝制路径，针随图案走。</div>
-      </div>
-      <div class="hl-card">
-        <div class="hl-num">03</div>
-        <div class="hl-icon">&#x1FAF1;</div>
-        <div class="hl-title">四大传统针法</div>
-        <div class="hl-desc">平针、回针、锁链针、十字针，独立渲染形态，绣线沿路径方向旋转。</div>
+        <div class="hl-desc">从刺绣图片像素中自动提取纹样轮廓，蛇形扫描生成缝制路径，针随图案走而非随机飘移。</div>
       </div>
     </div>
-    <div class="hl-col">
-      <div class="hl-card">
-        <div class="hl-num">04</div>
-        <div class="hl-icon">&#x1F338;</div>
+    <div class="hl-card">
+      <div class="hl-num">03</div>
+      <div class="hl-icon">&#x1FAF1;</div>
+      <div class="hl-body">
+        <div class="hl-title">四大传统针法</div>
+        <div class="hl-desc">平针、回针、锁链针、十字针，独立渲染形态，绣线沿路径方向旋转，长短变化自然。</div>
+      </div>
+    </div>
+    <div class="hl-card">
+      <div class="hl-num">04</div>
+      <div class="hl-icon">&#x1F338;</div>
+      <div class="hl-body">
         <div class="hl-title">成品图渐显</div>
-        <div class="hl-desc">随针数增加，真实刺绣成品图从绣布中逐渐浮现，沉浸感十足。</div>
+        <div class="hl-desc">随针数增加，真实刺绣成品图从绣布中逐渐浮现，与针迹融合渲染，沉浸感十足。</div>
       </div>
-      <div class="hl-card">
-        <div class="hl-num">05</div>
-        <div class="hl-icon">&#x1F3AD;</div>
+    </div>
+    <div class="hl-card">
+      <div class="hl-num">05</div>
+      <div class="hl-icon">&#x1F3AD;</div>
+      <div class="hl-body">
         <div class="hl-title">东方美学设计</div>
-        <div class="hl-desc">暗金色调、宋体排版、绣框绷子、织物纹理网格，还原传统工坊意境。</div>
+        <div class="hl-desc">暗金色调、宋体排版、绣框绷子、织物纹理网格，完整还原传统刺绣工坊的视觉意境。</div>
       </div>
-      <div class="hl-card">
-        <div class="hl-num">06</div>
-        <div class="hl-icon">&#x1F4F1;</div>
+    </div>
+    <div class="hl-card">
+      <div class="hl-num">06</div>
+      <div class="hl-icon">&#x1F4F1;</div>
+      <div class="hl-body">
         <div class="hl-title">纯前端 · 零依赖部署</div>
-        <div class="hl-desc">单文件 HTML，无需服务端，GitHub Pages 即可访问，兼容桌面和移动端。</div>
+        <div class="hl-desc">单文件 HTML，无需服务端，CDN 按需加载 MediaPipe，GitHub Pages 即可访问，兼容桌面和移动端。</div>
       </div>
     </div>
   </div>
 
   <!-- 页脚 -->
-  <div class="footer-area">
+  <div class="footer">
     <div class="footer-left">
       <div class="footer-brand">刺<span>绣</span> CIXIU</div>
       <div class="footer-sub">中国传统工艺 × 现代计算机视觉</div>
